@@ -194,14 +194,22 @@ class VoiceService:
         """
         try:
             if message_obj.has_audio:
-                # Build absolute URL for audio file
-                from django.conf import settings
-                relative_url = message_obj.audio_file.url
-                if relative_url.startswith('/'):
-                    # Get the base URL from settings
+                # Django-storages handles the URL construction automatically
+                # For S3: returns full S3 URL (https://bucket.s3.amazonaws.com/...)
+                # For local: returns relative URL that we need to make absolute
+                audio_url = message_obj.audio_file.url
+                
+                # If it's already a full URL (S3), return as-is
+                if audio_url.startswith('http'):
+                    return audio_url
+                
+                # If it's a relative URL (local development), make it absolute
+                if audio_url.startswith('/'):
+                    from django.conf import settings
                     base_url = getattr(settings, 'BACKEND_BASE_URL', 'http://localhost:8000')
-                    return f"{base_url}{relative_url}"
-                return relative_url
+                    return f"{base_url}{audio_url}"
+                
+                return audio_url
             return None
         except Exception as e:
             logger.error(f"Error getting audio URL for message: {str(e)}")
