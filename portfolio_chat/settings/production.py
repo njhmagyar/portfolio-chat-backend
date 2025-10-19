@@ -28,6 +28,7 @@ DATABASES = {
 # CORS settings for production
 CORS_ALLOWED_ORIGINS = [
     config('FRONTEND_URL', default=''),
+    config('FRONTEND_PATH_URL', default=''),
 ]
 
 # Remove empty strings from CORS_ALLOWED_ORIGINS
