@@ -115,6 +115,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Media files (user uploads like voice audio)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # CORS settings - will be overridden in environment-specific settings
 CORS_ALLOWED_ORIGINS = []
 CORS_ALLOW_CREDENTIALS = True
@@ -127,5 +131,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom user model
 AUTH_USER_MODEL = 'accounts.Account'
 
-# OpenAI API Key
+# API Keys
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+ELEVENLABS_API_KEY = config('ELEVENLABS_API_KEY', default='')
+ELEVENLABS_VOICE_ID = config('ELEVENLABS_VOICE_ID', default='pNInz6obpgDQGcFmaJgB')

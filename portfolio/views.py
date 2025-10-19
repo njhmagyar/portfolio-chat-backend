@@ -12,6 +12,7 @@ from datetime import timedelta
 from .models import Project, CaseStudy, Section, Conversation, Message
 from .services import PortfolioLLMService
 from .utils import validate_message_content, is_suspicious_pattern, get_client_ip
+from .voice_service import VoiceService
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +142,9 @@ def chat_query(request):
             'response': ai_response,
             'query': user_query,
             'session_id': str(conversation.session_id),
-            'message_count': conversation.total_messages
+            'message_count': conversation.total_messages,
+            'user_message_id': user_message.id,
+            'ai_message_id': ai_message.id
         })
         
     except json.JSONDecodeError:
@@ -231,16 +234,20 @@ def conversation_history(request, session_id):
         # Get all messages for this conversation
         messages = conversation.messages.all()
         
-        messages_data = [
-            {
+        messages_data = []
+        voice_service = VoiceService()
+        
+        for message in messages:
+            message_data = {
                 'id': message.id,
                 'message_type': message.message_type,
                 'content': message.content,
                 'timestamp': message.timestamp.isoformat(),
                 'order_in_session': message.order_in_session,
+                'has_audio': message.has_audio,
+                'audio_url': voice_service.get_audio_url_for_message(message) if message.has_audio else None,
             }
-            for message in messages
-        ]
+            messages_data.append(message_data)
         
         return JsonResponse({
             'session_id': str(conversation.session_id),
@@ -258,4 +265,192 @@ def conversation_history(request, session_id):
         logger.error(f"Error in conversation_history: {str(e)}")
         return JsonResponse({
             'error': 'An error occurred fetching conversation history'
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def generate_voice(request):
+    """
+    Generate voice audio for given text using ElevenLabs TTS.
+    Returns base64-encoded audio data.
+    """
+    try:
+        data = json.loads(request.body)
+        text = data.get('text', '').strip()
+        
+        if not text:
+            return JsonResponse({
+                'error': 'Text is required'
+            }, status=400)
+        
+        # Get client info for rate limiting
+        ip_address = get_client_ip(request)
+        
+        # Voice generation rate limiting (5 requests per minute per IP)
+        voice_rate_key = f"voice_rate_{ip_address}"
+        recent_voice_requests = cache.get(voice_rate_key, 0)
+        if recent_voice_requests >= 5:
+            logger.warning(f"Voice rate limit exceeded for IP: {ip_address}")
+            return JsonResponse({
+                'error': 'Voice generation rate limit exceeded. Please wait before generating more audio.'
+            }, status=429)
+        cache.set(voice_rate_key, recent_voice_requests + 1, 60)  # 1 minute expiry
+        
+        # Text length validation for voice generation
+        if len(text) > 1000:  # Reasonable limit for TTS
+            return JsonResponse({
+                'error': 'Text too long for voice generation (maximum 1000 characters)'
+            }, status=400)
+        
+        # Initialize voice service
+        voice_service = VoiceService()
+        
+        # Check if ElevenLabs API key is configured
+        if not settings.ELEVENLABS_API_KEY:
+            logger.error("ElevenLabs API key not configured")
+            return JsonResponse({
+                'error': 'Voice generation service not configured'
+            }, status=503)
+        
+        # Generate audio
+        start_time = time.time()
+        audio_base64 = voice_service.generate_audio_base64(text)
+        generation_time_ms = int((time.time() - start_time) * 1000)
+        
+        if not audio_base64:
+            return JsonResponse({
+                'error': 'Failed to generate voice audio'
+            }, status=500)
+        
+        logger.info(f"Generated voice for text length: {len(text)} chars, time: {generation_time_ms}ms")
+        
+        return JsonResponse({
+            'audio_data': audio_base64,
+            'audio_format': 'mp3',
+            'text_length': len(text),
+            'generation_time_ms': generation_time_ms
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'error': 'Invalid JSON in request body'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error in generate_voice: {str(e)}")
+        return JsonResponse({
+            'error': 'An error occurred generating voice audio'
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+def voice_test(request):
+    """
+    Test ElevenLabs API connection and return available voices.
+    """
+    try:
+        voice_service = VoiceService()
+        
+        # Test connection
+        connection_ok = voice_service.test_connection()
+        
+        if not connection_ok:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'ElevenLabs API connection failed'
+            }, status=503)
+        
+        # Get available voices
+        voices = voice_service.get_available_voices()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'ElevenLabs API connection successful',
+            'available_voices': voices[:10],  # Limit to first 10 voices
+            'total_voices': len(voices)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in voice_test: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Voice service test failed'
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def generate_message_audio(request):
+    """
+    Generate audio for a specific message by message ID.
+    """
+    try:
+        data = json.loads(request.body)
+        message_id = data.get('message_id')
+        
+        if not message_id:
+            return JsonResponse({
+                'error': 'message_id is required'
+            }, status=400)
+        
+        # Get client info for rate limiting
+        ip_address = get_client_ip(request)
+        
+        # Voice generation rate limiting (5 requests per minute per IP)
+        voice_rate_key = f"voice_rate_{ip_address}"
+        recent_voice_requests = cache.get(voice_rate_key, 0)
+        if recent_voice_requests >= 5:
+            logger.warning(f"Voice rate limit exceeded for IP: {ip_address}")
+            return JsonResponse({
+                'error': 'Voice generation rate limit exceeded. Please wait before generating more audio.'
+            }, status=429)
+        cache.set(voice_rate_key, recent_voice_requests + 1, 60)  # 1 minute expiry
+        
+        try:
+            message = Message.objects.get(id=message_id)
+        except Message.DoesNotExist:
+            return JsonResponse({
+                'error': 'Message not found'
+            }, status=404)
+        
+        # Only generate audio for AI responses
+        if message.message_type != 'ai_response':
+            return JsonResponse({
+                'error': 'Audio can only be generated for AI responses'
+            }, status=400)
+        
+        # Check if ElevenLabs API key is configured
+        if not settings.ELEVENLABS_API_KEY:
+            logger.error("ElevenLabs API key not configured")
+            return JsonResponse({
+                'error': 'Voice generation service not configured'
+            }, status=503)
+        
+        # Generate and save audio
+        voice_service = VoiceService()
+        success = voice_service.generate_and_save_audio_for_message(message)
+        
+        if not success:
+            return JsonResponse({
+                'error': 'Failed to generate audio for message'
+            }, status=500)
+        
+        # Get the audio URL
+        audio_url = voice_service.get_audio_url_for_message(message)
+        
+        return JsonResponse({
+            'message_id': message_id,
+            'audio_url': audio_url,
+            'has_audio': message.has_audio,
+            'generation_time_ms': message.audio_generation_time_ms
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'error': 'Invalid JSON in request body'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error in generate_message_audio: {str(e)}")
+        return JsonResponse({
+            'error': 'An error occurred generating message audio'
         }, status=500)

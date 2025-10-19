@@ -100,9 +100,19 @@ class Message(models.Model):
     token_count = models.PositiveIntegerField(null=True, blank=True)
     order_in_session = models.PositiveIntegerField()
     
+    # Audio fields for voice synthesis
+    audio_file = models.FileField(upload_to='voice_audio/', blank=True, null=True)
+    audio_generated_at = models.DateTimeField(blank=True, null=True)
+    audio_generation_time_ms = models.PositiveIntegerField(blank=True, null=True)
+    
     class Meta:
         ordering = ['order_in_session']
         unique_together = ['conversation', 'order_in_session']
     
     def __str__(self):
         return f"{self.conversation.session_id} - {self.message_type} #{self.order_in_session}"
+    
+    @property
+    def has_audio(self):
+        """Check if this message has associated audio."""
+        return bool(self.audio_file and self.audio_file.name)

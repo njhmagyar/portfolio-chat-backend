@@ -34,6 +34,9 @@ CORS_ALLOWED_ORIGINS = [
 # Additional local development settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Backend base URL for building absolute URLs
+BACKEND_BASE_URL = 'http://localhost:8000'
+
 # Logging for development
 LOGGING = {
     'version': 1,

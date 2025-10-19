@@ -34,6 +34,9 @@ CORS_ALLOWED_ORIGINS = [
 # Remove empty strings from CORS_ALLOWED_ORIGINS
 CORS_ALLOWED_ORIGINS = [origin for origin in CORS_ALLOWED_ORIGINS if origin]
 
+# Backend base URL for building absolute URLs
+BACKEND_BASE_URL = config('BACKEND_BASE_URL', default='https://portfolio-chat-backend-45247c01c107.herokuapp.com')
+
 # Security settings for production
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
