@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, CaseStudy, Section
+from .models import Project, CaseStudy, Section, Conversation, Message
 
 
 class SectionInline(admin.TabularInline):
@@ -15,8 +15,8 @@ class CaseStudyInline(admin.StackedInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'featured', 'created_at']
-    list_filter = ['category', 'featured', 'created_at']
+    list_display = ['title', 'featured', 'created_at']
+    list_filter = ['featured', 'created_at']
     search_fields = ['title', 'summary', 'description']
     prepopulated_fields = {'slug': ('title',)}
     list_editable = ['featured']
@@ -24,7 +24,7 @@ class ProjectAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'slug', 'category', 'emoji', 'featured')
+            'fields': ('title', 'slug', 'featured')
         }),
         ('Content', {
             'fields': ('summary', 'description', 'role', 'timeline')
@@ -38,7 +38,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(CaseStudy)
 class CaseStudyAdmin(admin.ModelAdmin):
-    list_display = ['project', 'created_sections_count']
+    list_display = ['project', 'category', 'created_sections_count']
     search_fields = ['project__title', 'problem_statement', 'solution_overview']
     inlines = [SectionInline]
     
@@ -48,7 +48,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Project Link', {
-            'fields': ('project',)
+            'fields': ('project', 'category')
         }),
         ('Case Study Content', {
             'fields': ('problem_statement', 'solution_overview', 'lessons_learned', 'next_steps')
@@ -63,7 +63,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
     list_display = ['title', 'case_study', 'section_type', 'order']
-    list_filter = ['section_type', 'case_study__project__category']
+    list_filter = ['section_type', 'case_study__category']
     search_fields = ['title', 'content', 'case_study__project__title']
     list_editable = ['order']
     
@@ -77,5 +77,64 @@ class SectionAdmin(admin.ModelAdmin):
         ('Media', {
             'fields': ('media_urls',),
             'description': 'Enter media URLs as JSON array, e.g., ["http://example.com/image1.jpg"]'
+        }),
+    )
+
+
+class MessageInline(admin.TabularInline):
+    model = Message
+    extra = 0
+    fields = ['message_type', 'content', 'timestamp', 'response_time_ms', 'token_count']
+    readonly_fields = ['timestamp']
+    ordering = ['order_in_session']
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ['session_id_short', 'started_at', 'total_messages', 'is_active', 'last_activity']
+    list_filter = ['is_active', 'started_at', 'last_activity']
+    search_fields = ['session_id', 'ip_address']
+    readonly_fields = ['session_id', 'started_at', 'last_activity']
+    inlines = [MessageInline]
+    
+    def session_id_short(self, obj):
+        return str(obj.session_id)[:8] + "..."
+    session_id_short.short_description = 'Session ID'
+    
+    fieldsets = (
+        ('Session Info', {
+            'fields': ('session_id', 'started_at', 'last_activity', 'is_active')
+        }),
+        ('Statistics', {
+            'fields': ('total_messages',)
+        }),
+        ('Technical Data', {
+            'fields': ('ip_address', 'user_agent'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ['conversation_short', 'message_type', 'order_in_session', 'timestamp', 'response_time_ms', 'token_count']
+    list_filter = ['message_type', 'timestamp']
+    search_fields = ['conversation__session_id', 'content']
+    readonly_fields = ['timestamp']
+    
+    def conversation_short(self, obj):
+        return str(obj.conversation.session_id)[:8] + "..."
+    conversation_short.short_description = 'Conversation'
+    
+    fieldsets = (
+        ('Message Info', {
+            'fields': ('conversation', 'message_type', 'order_in_session', 'timestamp')
+        }),
+        ('Content', {
+            'fields': ('content',)
+        }),
+        ('Metrics', {
+            'fields': ('response_time_ms', 'token_count'),
+            'description': 'Performance and usage metrics (AI responses only)'
         }),
     )

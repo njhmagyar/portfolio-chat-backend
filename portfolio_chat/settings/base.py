@@ -126,3 +126,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom user model
 AUTH_USER_MODEL = 'accounts.Account'
+
+# OpenAI API Key
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
