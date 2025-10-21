@@ -12,6 +12,13 @@ PROFANITY_WORDS = {
     'bastard', 'ass', 'asshole', 'fag', 'faggot', 'cunt'
 }
 
+# Whitelist of acceptable words that contain flagged substrings
+ACCEPTABLE_WORDS = {
+    'skills', 'skilled', 'skillful', 'skillfully', 'skillet', 'skill',
+    'classical', 'glasses', 'class', 'massage', 'assess', 'assessment',
+    'assassin', 'assistance', 'assistant', 'passion', 'passionate'
+}
+
 def validate_message_content(message: str) -> Tuple[bool, str]:
     """
     Validate message content for abuse prevention.
@@ -42,12 +49,20 @@ def validate_message_content(message: str) -> Tuple[bool, str]:
         if caps_ratio > 0.7:  # More than 70% caps
             return False, "Message contains excessive capital letters"
     
-    # Basic profanity filter
+    # Basic profanity filter with whitelist check
     message_lower = message.lower()
+    words_in_message = set(re.findall(r'\b\w+\b', message_lower))
+    
+    # Check if any message words are in the acceptable whitelist
+    acceptable_found = words_in_message.intersection(ACCEPTABLE_WORDS)
+    
     found_profanity = []
     for word in PROFANITY_WORDS:
         if word in message_lower:
-            found_profanity.append(word)
+            # Check if this profanity is part of an acceptable word
+            is_part_of_acceptable = any(word in acceptable for acceptable in acceptable_found)
+            if not is_part_of_acceptable:
+                found_profanity.append(word)
     
     if found_profanity:
         logger.warning(f"Profanity detected in message: {found_profanity}")

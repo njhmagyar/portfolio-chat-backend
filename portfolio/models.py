@@ -105,6 +105,10 @@ class Message(models.Model):
     audio_generated_at = models.DateTimeField(blank=True, null=True)
     audio_generation_time_ms = models.PositiveIntegerField(blank=True, null=True)
     
+    # Slide fields for presentation generation
+    slide_title = models.CharField(max_length=200, blank=True, null=True)
+    slide_body = models.TextField(blank=True, null=True)  # Stores HTML content
+    
     class Meta:
         ordering = ['order_in_session']
         unique_together = ['conversation', 'order_in_session']

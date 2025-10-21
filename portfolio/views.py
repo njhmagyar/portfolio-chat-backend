@@ -13,6 +13,7 @@ from .models import Project, CaseStudy, Section, Conversation, Message
 from .services import PortfolioLLMService
 from .utils import validate_message_content, is_suspicious_pattern, get_client_ip
 from .voice_service import VoiceService
+from .slide_service import SlideService
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,10 @@ def chat_query(request):
                 token_count=estimated_tokens
             )
             
+            # Generate slide content for the AI response
+            slide_service = SlideService()
+            slide_service.generate_slide_for_message(ai_message)
+            
             # Update conversation stats
             conversation.total_messages = conversation.messages.count()
             conversation.save(update_fields=['total_messages'])
@@ -144,7 +149,9 @@ def chat_query(request):
             'session_id': str(conversation.session_id),
             'message_count': conversation.total_messages,
             'user_message_id': user_message.id,
-            'ai_message_id': ai_message.id
+            'ai_message_id': ai_message.id,
+            'slide_title': ai_message.slide_title,
+            'slide_body': ai_message.slide_body
         })
         
     except json.JSONDecodeError:
@@ -246,6 +253,8 @@ def conversation_history(request, session_id):
                 'order_in_session': message.order_in_session,
                 'has_audio': message.has_audio,
                 'audio_url': voice_service.get_audio_url_for_message(message) if message.has_audio else None,
+                'slide_title': message.slide_title,
+                'slide_body': message.slide_body,
             }
             messages_data.append(message_data)
         
