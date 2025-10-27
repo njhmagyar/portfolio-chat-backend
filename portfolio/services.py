@@ -73,9 +73,8 @@ PORTFOLIO CONTEXT:
 CRITICAL INSTRUCTIONS:
 1. ONLY answer based on the portfolio data above - never invent or assume information
 2. If the portfolio data doesn't contain information to answer a question, respond with: "Sorry, I don't have enough information in my portfolio to answer that question."
-3. Keep all responses under 144 characters - be concise and direct
-4. Always speak in first person as Nathan Magyar
-5. Focus on facts from the portfolio data only
+3. Always speak in first person as Nathan Magyar
+4. Focus on facts from the portfolio data only
 
 ACCEPTABLE TOPICS (only if data exists above):
 - Specific projects and their details
@@ -88,12 +87,40 @@ UNACCEPTABLE: Any information not explicitly stated in the portfolio context abo
 
 Remember: Accuracy over helpfulness. If you don't have the specific information in the portfolio data, say so rather than guessing."""
 
-    def generate_response(self, user_query: str) -> str:
+    def get_token_limit_for_length(self, response_length: str) -> int:
+        """
+        Get appropriate token limit based on response length preference.
+        """
+        token_limits = {
+            'short': 200,   # ~50-75 words
+            'medium': 300,  # ~75-100 words  
+            'long': 400     # ~100-150 words
+        }
+        return token_limits.get(response_length, 200)
+    
+    def get_length_instruction(self, response_length: str) -> str:
+        """
+        Get response length instruction for the system prompt.
+        """
+        instructions = {
+            'short': "Keep responses very brief - 1-2 sentences maximum.",
+            'medium': "Provide a moderate response - 2-4 sentences with key details.",
+            'long': "Give a comprehensive response with full details, examples, and context."
+        }
+        return instructions.get(response_length, instructions['short'])
+
+    def generate_response(self, user_query: str, response_length: str = 'short') -> str:
         """
         Generate a response to the user's query using OpenAI's API.
         """
         try:
             system_prompt = self.generate_system_prompt()
+            length_instruction = self.get_length_instruction(response_length)
+            
+            # Add length instruction to system prompt
+            system_prompt += f"\n\nRESPONSE LENGTH: {length_instruction}"
+            
+            token_limit = self.get_token_limit_for_length(response_length)
             
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -101,7 +128,7 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_query}
                 ],
-                max_tokens=250,
+                max_tokens=token_limit,
                 temperature=0.7,
             )
             

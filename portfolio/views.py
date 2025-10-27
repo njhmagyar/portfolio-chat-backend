@@ -29,6 +29,7 @@ def chat_query(request):
         data = json.loads(request.body)
         user_query = data.get('query', '').strip()
         session_id = data.get('session_id')  # Frontend will provide this
+        response_length = data.get('response_length', 'short')  # Default to short
         
         if not user_query:
             return JsonResponse({
@@ -113,13 +114,14 @@ def chat_query(request):
                 conversation=conversation,
                 message_type='user_query',
                 content=user_query,
-                order_in_session=next_order
+                order_in_session=next_order,
+                response_length=response_length
             )
             
             # Generate AI response
             start_time = time.time()
             llm_service = PortfolioLLMService()
-            ai_response = llm_service.generate_response(user_query)
+            ai_response = llm_service.generate_response(user_query, response_length=response_length)
             response_time_ms = int((time.time() - start_time) * 1000)
             
             # Estimate token count (rough approximation: ~4 chars per token)
@@ -132,7 +134,8 @@ def chat_query(request):
                 content=ai_response,
                 order_in_session=next_order + 1,
                 response_time_ms=response_time_ms,
-                token_count=estimated_tokens
+                token_count=estimated_tokens,
+                response_length=response_length
             )
             
             # Generate slide content for the AI response

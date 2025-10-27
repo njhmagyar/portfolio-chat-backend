@@ -92,6 +92,12 @@ class Message(models.Model):
         ('ai_response', 'AI Response'),
     ]
     
+    RESPONSE_LENGTH_CHOICES = [
+        ('short', 'Short'),
+        ('medium', 'Medium'),
+        ('long', 'Long'),
+    ]
+    
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
     content = models.TextField()
@@ -99,6 +105,7 @@ class Message(models.Model):
     response_time_ms = models.PositiveIntegerField(null=True, blank=True)
     token_count = models.PositiveIntegerField(null=True, blank=True)
     order_in_session = models.PositiveIntegerField()
+    response_length = models.CharField(max_length=10, choices=RESPONSE_LENGTH_CHOICES, default='short')
     
     # Audio fields for voice synthesis
     audio_file = models.FileField(upload_to='voice_audio/', blank=True, null=True)
