@@ -13,6 +13,7 @@ class Project(models.Model):
     timeline = models.CharField(max_length=50)
     technologies = models.JSONField(default=list)
     featured = models.BooleanField(default=False)
+    logo = models.ImageField(upload_to='project-logos/', blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     

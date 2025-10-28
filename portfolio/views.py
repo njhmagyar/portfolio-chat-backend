@@ -180,6 +180,16 @@ def projects_list(request):
         projects_data = []
         
         for project in projects:
+            # Handle logo URL (make absolute if needed)
+            logo_url = None
+            if project.logo:
+                logo_url = project.logo.url
+                # If it's already a full URL (S3), use as-is
+                if not logo_url.startswith('http') and logo_url.startswith('/'):
+                    # If it's a relative URL (local development), make it absolute
+                    base_url = getattr(settings, 'BACKEND_BASE_URL', 'http://localhost:8000')
+                    logo_url = f"{base_url}{logo_url}"
+            
             project_data = {
                 'id': project.id,
                 'title': project.title,
@@ -190,6 +200,7 @@ def projects_list(request):
                 'timeline': project.timeline,
                 'technologies': project.technologies,
                 'featured': project.featured,
+                'logo': logo_url,
                 'created_at': project.created_at.isoformat(),
             }
             

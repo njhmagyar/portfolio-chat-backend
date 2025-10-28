@@ -24,7 +24,7 @@ class ProjectAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'slug', 'featured')
+            'fields': ('title', 'logo', 'slug', 'featured')
         }),
         ('Content', {
             'fields': ('summary', 'description', 'role', 'timeline')
