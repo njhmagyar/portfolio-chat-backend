@@ -140,6 +140,7 @@ class VoiceService:
     def generate_and_save_audio_for_message(self, message_obj, text: str = None) -> bool:
         """
         Generate audio for a message and save it to the message object.
+        If the message has a source_faq with audio, reuse that audio instead of generating new.
         Returns True if successful, False otherwise.
         """
         try:
@@ -157,7 +158,12 @@ class VoiceService:
                 logger.info(f"Audio already exists for message {message_obj.id}")
                 return True
             
-            # Generate audio
+            # Check if this message was based on an FAQ with audio (the correct approach)
+            if message_obj.source_faq and message_obj.source_faq.has_audio:
+                logger.info(f"Message {message_obj.id} is based on FAQ {message_obj.source_faq.id} with audio, copying audio file")
+                return self._copy_faq_audio_to_message(message_obj.source_faq, message_obj)
+            
+            # Generate new audio if no source FAQ or FAQ has no audio
             start_time = timezone.now()
             audio_data = self.generate_audio(text)
             
@@ -181,7 +187,11 @@ class VoiceService:
             message_obj.audio_generation_time_ms = generation_time_ms
             message_obj.save()
             
-            logger.info(f"Generated and saved audio for message {message_obj.id}, time: {generation_time_ms}ms")
+            if message_obj.source_faq:
+                logger.info(f"Generated new audio for message {message_obj.id} based on FAQ {message_obj.source_faq.id} (FAQ had no audio), time: {generation_time_ms}ms")
+            else:
+                logger.info(f"Generated new audio for message {message_obj.id} (not based on FAQ), time: {generation_time_ms}ms")
+            
             return True
             
         except Exception as e:
@@ -214,6 +224,93 @@ class VoiceService:
         except Exception as e:
             logger.error(f"Error getting audio URL for message: {str(e)}")
             return None
+    
+    
+    def _copy_faq_audio_to_message(self, faq_obj, message_obj) -> bool:
+        """
+        Copy audio file from FAQ to message object.
+        """
+        try:
+            if not faq_obj.has_audio:
+                logger.warning(f"FAQ {faq_obj.id} has no audio to copy")
+                return False
+            
+            # Read the FAQ audio file data
+            faq_obj.audio_file.open('rb')
+            audio_data = faq_obj.audio_file.read()
+            faq_obj.audio_file.close()
+            
+            if not audio_data:
+                logger.error(f"Failed to read audio data from FAQ {faq_obj.id}")
+                return False
+            
+            # Create filename for message
+            filename = f"msg_{message_obj.conversation.session_id}_{message_obj.order_in_session}.mp3"
+            
+            # Save audio file to message
+            audio_file = ContentFile(audio_data, name=filename)
+            message_obj.audio_file.save(filename, audio_file, save=False)
+            
+            # Copy audio metadata from FAQ (use original generation time)
+            message_obj.audio_generated_at = timezone.now()
+            message_obj.audio_generation_time_ms = faq_obj.audio_generation_time_ms or 0
+            message_obj.save()
+            
+            logger.info(f"Successfully copied audio from FAQ {faq_obj.id} to message {message_obj.id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error copying FAQ audio to message: {str(e)}")
+            return False
+
+    def generate_and_save_audio_for_faq(self, faq_obj) -> bool:
+        """
+        Generate audio for an FAQ and save it to the FAQ object.
+        Returns True if successful, False otherwise.
+        """
+        try:
+            # Use FAQ response as the text to convert
+            text = faq_obj.response
+            
+            if not text or not text.strip():
+                logger.warning(f"Empty response for FAQ {faq_obj.id}")
+                return False
+            
+            # Check if audio already exists
+            if faq_obj.has_audio:
+                logger.info(f"Audio already exists for FAQ {faq_obj.id}")
+                return True
+            
+            # Generate audio
+            start_time = timezone.now()
+            audio_data = self.generate_audio(text)
+            
+            if not audio_data:
+                logger.error("Failed to generate audio data for FAQ")
+                return False
+            
+            # Calculate generation time
+            generation_time = timezone.now() - start_time
+            generation_time_ms = int(generation_time.total_seconds() * 1000)
+            
+            # Create filename based on FAQ info
+            filename = f"faq_{faq_obj.id}.mp3"
+            
+            # Save audio file to FAQ
+            audio_file = ContentFile(audio_data, name=filename)
+            faq_obj.audio_file.save(filename, audio_file, save=False)
+            
+            # Update audio metadata
+            faq_obj.audio_generated_at = timezone.now()
+            faq_obj.audio_generation_time_ms = generation_time_ms
+            faq_obj.save()
+            
+            logger.info(f"Generated and saved audio for FAQ {faq_obj.id}, time: {generation_time_ms}ms")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error generating and saving audio for FAQ: {str(e)}")
+            return False
     
     def test_connection(self) -> bool:
         """

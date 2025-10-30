@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Project(models.Model):
@@ -71,6 +73,43 @@ class Section(models.Model):
         return f"{self.case_study.project.title} - {self.title}"
 
 
+class FAQ(models.Model):
+    """
+    Frequently Asked Questions model to store common questions and responses
+    for LLM context enhancement.
+    """
+    question = models.TextField(help_text="The frequently asked question")
+    response = models.TextField(help_text="Plain text response to the question")
+    media_urls = models.JSONField(
+        default=list, 
+        blank=True,
+        help_text="List of media URLs related to this FAQ (images, videos, etc.)"
+    )
+    is_featured = models.BooleanField(default=False, blank=True, help_text="Whether the FAQ's question is shown as a prompt on the homepage")
+    is_active = models.BooleanField(default=True, help_text="Whether this FAQ is active and should be included in LLM context")
+    priority = models.PositiveIntegerField(default=0, help_text="Higher priority FAQs are included first in LLM context")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Audio fields for voice synthesis
+    audio_file = models.FileField(upload_to='faq_audio/', blank=True, null=True)
+    audio_generated_at = models.DateTimeField(blank=True, null=True)
+    audio_generation_time_ms = models.PositiveIntegerField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-priority', '-created_at']
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+    
+    def __str__(self):
+        return f"FAQ: {self.question[:100]}{'...' if len(self.question) > 100 else ''}"
+    
+    @property
+    def has_audio(self):
+        """Check if this FAQ has associated audio."""
+        return bool(self.audio_file and self.audio_file.name)
+
+
 class Conversation(models.Model):
     session_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     started_at = models.DateTimeField(default=timezone.now)
@@ -117,6 +156,10 @@ class Message(models.Model):
     slide_title = models.CharField(max_length=200, blank=True, null=True)
     slide_body = models.TextField(blank=True, null=True)  # Stores HTML content
     
+    # FAQ source tracking for audio reuse
+    source_faq = models.ForeignKey('FAQ', on_delete=models.SET_NULL, blank=True, null=True, 
+                                   help_text="FAQ that was used as the source for this response")
+    
     class Meta:
         ordering = ['order_in_session']
         unique_together = ['conversation', 'order_in_session']
@@ -128,3 +171,24 @@ class Message(models.Model):
     def has_audio(self):
         """Check if this message has associated audio."""
         return bool(self.audio_file and self.audio_file.name)
+
+
+# Signal handlers for automatic audio generation
+@receiver(post_save, sender=FAQ)
+def generate_faq_audio(sender, instance, created, **kwargs):
+    """
+    Automatically generate audio for FAQ when it's created or response is updated.
+    """
+    # Only generate audio if the FAQ has a response and doesn't already have audio
+    if instance.response and not instance.has_audio:
+        try:
+            from .voice_service import VoiceService
+            voice_service = VoiceService()
+            
+            # Generate audio for the FAQ response
+            voice_service.generate_and_save_audio_for_faq(instance)
+        except Exception as e:
+            # Log error but don't fail the save
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to generate audio for FAQ {instance.id}: {str(e)}")

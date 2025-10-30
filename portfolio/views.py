@@ -9,7 +9,7 @@ from django.db import transaction
 from django.core.cache import cache
 from django.utils import timezone
 from datetime import timedelta
-from .models import Project, CaseStudy, Section, Conversation, Message
+from .models import Project, CaseStudy, Section, Conversation, Message, FAQ
 from .services import PortfolioLLMService
 from .utils import validate_message_content, is_suspicious_pattern, get_client_ip
 from .voice_service import VoiceService
@@ -121,13 +121,13 @@ def chat_query(request):
             # Generate AI response
             start_time = time.time()
             llm_service = PortfolioLLMService()
-            ai_response = llm_service.generate_response(user_query, response_length=response_length)
+            ai_response, source_faq = llm_service.generate_response(user_query, response_length=response_length)
             response_time_ms = int((time.time() - start_time) * 1000)
             
             # Estimate token count (rough approximation: ~4 chars per token)
             estimated_tokens = len(user_query + ai_response) // 4
             
-            # Save AI message
+            # Save AI message with source FAQ if identified
             ai_message = Message.objects.create(
                 conversation=conversation,
                 message_type='ai_response',
@@ -135,7 +135,8 @@ def chat_query(request):
                 order_in_session=next_order + 1,
                 response_time_ms=response_time_ms,
                 token_count=estimated_tokens,
-                response_length=response_length
+                response_length=response_length,
+                source_faq=source_faq  # Track which FAQ was used as source
             )
             
             # Generate slide content for the AI response
@@ -477,3 +478,127 @@ def generate_message_audio(request):
         return JsonResponse({
             'error': 'An error occurred generating message audio'
         }, status=500)
+
+
+@require_http_methods(["GET"])
+def featured_questions(request):
+    """
+    Return featured FAQ questions for homepage prompts.
+    Falls back to default questions if no FAQs are featured.
+    """
+    try:
+        # Get featured FAQ questions
+        featured_faqs = FAQ.objects.filter(is_featured=True, is_active=True).order_by('-priority', '-created_at')[:6]
+        
+        if featured_faqs:
+            # Use featured FAQ questions with audio URLs
+            questions_data = []
+            voice_service = VoiceService()
+            
+            for faq in featured_faqs:
+                # Get audio URL using the same pattern as message audio
+                audio_url = None
+                if faq.has_audio:
+                    try:
+                        # Handle audio URL generation similar to message audio
+                        if faq.audio_file.url.startswith('http'):
+                            audio_url = faq.audio_file.url
+                        elif faq.audio_file.url.startswith('/'):
+                            base_url = getattr(settings, 'BACKEND_BASE_URL', 'http://localhost:8000')
+                            audio_url = f"{base_url}{faq.audio_file.url}"
+                        else:
+                            audio_url = faq.audio_file.url
+                    except Exception as e:
+                        logger.error(f"Error getting audio URL for FAQ {faq.id}: {str(e)}")
+                        audio_url = None
+                
+                question_data = {
+                    'question': faq.question,
+                    'response': faq.response,
+                    'has_audio': faq.has_audio,
+                    'audio_url': audio_url,
+                    'faq_id': faq.id
+                }
+                questions_data.append(question_data)
+            
+            return JsonResponse({
+                'questions': questions_data,
+                'source': 'featured_faqs',
+                'count': len(questions_data)
+            })
+        else:
+            # Fallback to default hardcoded questions (without audio)
+            questions = [
+                {
+                    'question': "What projects have you worked on?",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                },
+                {
+                    'question': "What are your main skills?",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                }, 
+                {
+                    'question': "Tell me about your experience",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                },
+                {
+                    'question': "What's your design process?",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                }
+            ]
+            
+            return JsonResponse({
+                'questions': questions,
+                'source': 'default',
+                'count': len(questions)
+            })
+        
+    except Exception as e:
+        logger.error(f"Error in featured_questions: {str(e)}")
+        # Return fallback questions on error
+        return JsonResponse({
+            'questions': [
+                {
+                    'question': "What projects have you worked on?",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                },
+                {
+                    'question': "What are your main skills?",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                },
+                {
+                    'question': "Tell me about your experience",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                }, 
+                {
+                    'question': "What's your design process?",
+                    'response': None,
+                    'has_audio': False,
+                    'audio_url': None,
+                    'faq_id': None
+                }
+            ],
+            'source': 'fallback',
+            'count': 4
+        })

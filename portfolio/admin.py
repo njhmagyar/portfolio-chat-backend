@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, CaseStudy, Section, Conversation, Message
+from .models import Project, CaseStudy, Section, FAQ, Conversation, Message
 
 
 class SectionInline(admin.TabularInline):
@@ -81,6 +81,34 @@ class SectionAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ['question_short', 'is_featured', 'is_active', 'priority', 'created_at', 'updated_at']
+    list_filter = ['is_featured', 'is_active', 'priority', 'created_at']
+    search_fields = ['question', 'response']
+    list_editable = ['is_featured', 'is_active', 'priority']
+    ordering = ['-priority', '-created_at']
+    
+    def question_short(self, obj):
+        return obj.question[:100] + ('...' if len(obj.question) > 100 else '')
+    question_short.short_description = 'Question'
+    
+    fieldsets = (
+        ('FAQ Content', {
+            'fields': ('question', 'response')
+        }),
+        ('Settings', {
+            'fields': ('is_featured', 'is_active', 'priority'),
+            'description': 'Featured FAQs appear as homepage prompts. Higher priority FAQs are included first in LLM context'
+        }),
+        ('Media', {
+            'fields': ('media_urls',),
+            'description': 'Enter media URLs as JSON array, e.g., ["http://example.com/image1.jpg"]',
+            'classes': ('collapse',)
+        }),
+    )
+
+
 class MessageInline(admin.TabularInline):
     model = Message
     extra = 0
@@ -132,6 +160,9 @@ class MessageAdmin(admin.ModelAdmin):
         }),
         ('Content', {
             'fields': ('content',)
+        }),
+        ('Slides & Audio', {
+            'fields': ('source_faq', 'slide_title', 'slide_body', 'audio_file',)
         }),
         ('Metrics', {
             'fields': ('response_time_ms', 'token_count'),

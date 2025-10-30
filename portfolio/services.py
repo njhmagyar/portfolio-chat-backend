@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Any
 from django.conf import settings
 from openai import OpenAI
-from .models import Project, CaseStudy, Section
+from .models import Project, CaseStudy, Section, FAQ
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +59,43 @@ Next Steps: {case_study.next_steps}
         
         return "\n" + "="*50 + "\n".join(context_parts)
     
+    def get_faq_context(self) -> str:
+        """
+        Retrieve and format FAQ data as context for the LLM.
+        """
+        faqs = FAQ.objects.filter(is_active=True)[:20]  # Limit to 20 most relevant FAQs
+        
+        if not faqs:
+            return ""
+            
+        faq_parts = []
+        for faq in faqs:
+            faq_context = f"""
+Q: {faq.question}
+A: {faq.response}"""
+            
+            # Add media URLs if available
+            if faq.media_urls:
+                media_list = ', '.join(faq.media_urls)
+                faq_context += f"\nMedia: {media_list}"
+            
+            faq_parts.append(faq_context)
+        
+        if faq_parts:
+            return "\n\nFREQUENTLY ASKED QUESTIONS:\n" + "="*50 + "\n".join(faq_parts)
+        return ""
+    
     def generate_system_prompt(self) -> str:
         """
-        Generate the system prompt with portfolio context.
+        Generate the system prompt with portfolio context and FAQ data.
         """
         portfolio_context = self.get_portfolio_context()
+        faq_context = self.get_faq_context()
         
-        return f"""You are Nathan Magyar, a product designer and developer. You can ONLY answer questions based on the portfolio data provided below. Do not make up information or speculate.
+        return f"""You are Nathan Magyar, a product designer and developer. You can ONLY answer questions based on the portfolio data and FAQ information provided below. Do not make up information or speculate.
 
 PORTFOLIO CONTEXT:
-{portfolio_context}
+{portfolio_context}{faq_context}
 
 CRITICAL INSTRUCTIONS:
 1. ONLY answer based on the portfolio data above - never invent or assume information
@@ -109,9 +136,10 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
         }
         return instructions.get(response_length, instructions['short'])
 
-    def generate_response(self, user_query: str, response_length: str = 'short') -> str:
+    def generate_response(self, user_query: str, response_length: str = 'short') -> tuple[str, 'FAQ']:
         """
         Generate a response to the user's query using OpenAI's API.
+        Returns tuple of (response_text, source_faq) where source_faq is None if no FAQ was used.
         """
         try:
             system_prompt = self.generate_system_prompt()
@@ -132,11 +160,42 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
                 temperature=0.7,
             )
             
-            return response.choices[0].message.content.strip()
+            response_text = response.choices[0].message.content.strip()
+            
+            # Check if the response matches any FAQ response to determine source
+            source_faq = self._find_source_faq_for_response(response_text)
+            
+            return response_text, source_faq
             
         except Exception as e:
             logger.error(f"Error generating LLM response: {str(e)}")
-            return "I'm sorry, I'm having trouble processing your question right now. Could you please try again in a moment?"
+            return "I'm sorry, I'm having trouble processing your question right now. Could you please try again in a moment?", None
+    
+    def _find_source_faq_for_response(self, response_text: str):
+        """
+        Find the FAQ that was used as the source for this response.
+        Uses only exact matching to avoid incorrect audio reuse.
+        """
+        try:
+            # Clean the response text for comparison (normalize whitespace)
+            cleaned_response = ' '.join(response_text.split()).strip()
+            
+            # Only use exact match - no fuzzy matching to avoid false positives
+            exact_match = FAQ.objects.filter(
+                response__iexact=cleaned_response,
+                is_active=True
+            ).first()
+            
+            if exact_match:
+                logger.info(f"Found exact FAQ match {exact_match.id} for LLM response")
+                return exact_match
+            
+            # No exact match found - do not reuse audio
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error finding source FAQ for response: {str(e)}")
+            return None
     
     def get_project_by_category(self, category: str) -> List[Project]:
         """
