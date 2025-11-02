@@ -121,7 +121,7 @@ def chat_query(request):
             # Generate AI response
             start_time = time.time()
             llm_service = PortfolioLLMService()
-            ai_response, source_faq = llm_service.generate_response(user_query, response_length=response_length)
+            ai_response, source_faq, follow_up_suggestions = llm_service.generate_response(user_query, response_length=response_length)
             response_time_ms = int((time.time() - start_time) * 1000)
             
             # Estimate token count (rough approximation: ~4 chars per token)
@@ -155,7 +155,9 @@ def chat_query(request):
             'user_message_id': user_message.id,
             'ai_message_id': ai_message.id,
             'slide_title': ai_message.slide_title,
-            'slide_body': ai_message.slide_body
+            'slide_body': ai_message.slide_body,
+            'slide_media_urls': ai_message.slide_media_urls,
+            'follow_up_suggestions': follow_up_suggestions
         })
         
     except json.JSONDecodeError:

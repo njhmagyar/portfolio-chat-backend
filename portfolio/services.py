@@ -40,12 +40,10 @@ Featured: {'Yes' if project.featured else 'No'}
                 case_study = project.case_study
                 project_context += f"""
 CASE STUDY:
-Problem Statement: {case_study.problem_statement}
+Title: {case_study.title}
 Category: {case_study.category}
-Solution Overview: {case_study.solution_overview}
-Impact Metrics: {json.dumps(case_study.impact_metrics)}
-Lessons Learned: {case_study.lessons_learned}
-Next Steps: {case_study.next_steps}
+Description: {case_study.description}
+Hero Image: {case_study.hero_image or 'None'}
 """
                 
                 # Add sections
@@ -107,8 +105,8 @@ ACCEPTABLE TOPICS (only if data exists above):
 - Specific projects and their details
 - Technologies used in documented projects
 - Roles and timelines from project data
-- Impact metrics and outcomes shown in portfolio
-- Problem statements and solutions from case studies
+- Case study titles, categories, and descriptions
+- Section content from case studies (overview, context, research, design process, implementation, results, reflection)
 
 UNACCEPTABLE: Any information not explicitly stated in the portfolio context above.
 
@@ -136,10 +134,10 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
         }
         return instructions.get(response_length, instructions['short'])
 
-    def generate_response(self, user_query: str, response_length: str = 'short') -> tuple[str, 'FAQ']:
+    def generate_response(self, user_query: str, response_length: str = 'short') -> tuple[str, 'FAQ', list]:
         """
         Generate a response to the user's query using OpenAI's API.
-        Returns tuple of (response_text, source_faq) where source_faq is None if no FAQ was used.
+        Returns tuple of (response_text, source_faq, follow_up_suggestions) where source_faq is None if no FAQ was used.
         """
         try:
             system_prompt = self.generate_system_prompt()
@@ -165,11 +163,14 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
             # Check if the response matches any FAQ response to determine source
             source_faq = self._find_source_faq_for_response(response_text)
             
-            return response_text, source_faq
+            # Generate follow-up suggestions
+            follow_up_suggestions = self.generate_follow_up_suggestions(user_query, response_text)
+            
+            return response_text, source_faq, follow_up_suggestions
             
         except Exception as e:
             logger.error(f"Error generating LLM response: {str(e)}")
-            return "I'm sorry, I'm having trouble processing your question right now. Could you please try again in a moment?", None
+            return "I'm sorry, I'm having trouble processing your question right now. Could you please try again in a moment?", None, []
     
     def _find_source_faq_for_response(self, response_text: str):
         """
@@ -196,6 +197,78 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
         except Exception as e:
             logger.error(f"Error finding source FAQ for response: {str(e)}")
             return None
+    
+    def generate_follow_up_suggestions(self, user_query: str, response_text: str) -> list:
+        """
+        Generate 2-3 follow-up suggestions based on the user's query and response.
+        """
+        try:
+            # Create a simple prompt for generating follow-up suggestions
+            follow_up_prompt = f"""Based on this conversation, suggest 2-3 brief follow-up questions that would naturally continue the conversation about Nathan Magyar's portfolio and work. Focus on related projects, technologies, or process details.
+
+User asked: "{user_query}"
+Response given: "{response_text[:300]}..."
+
+Generate 2-3 short, specific follow-up questions (one per line, no numbers or bullets). Each should be under 60 characters."""
+
+            follow_up_response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are helping generate natural follow-up questions for a portfolio conversation. Keep questions concise and relevant."},
+                    {"role": "user", "content": follow_up_prompt}
+                ],
+                max_tokens=150,
+                temperature=0.8,
+            )
+            
+            # Parse the response into individual suggestions
+            suggestions_text = follow_up_response.choices[0].message.content.strip()
+            suggestions = [s.strip() for s in suggestions_text.split('\n') if s.strip()]
+            
+            # Limit to 3 suggestions and ensure they're not too long
+            suggestions = [s for s in suggestions[:3] if len(s) <= 80 and s.endswith('?')]
+            
+            # Fallback suggestions if generation fails or produces poor results
+            if not suggestions:
+                suggestions = self._get_fallback_suggestions(user_query)
+            
+            return suggestions
+            
+        except Exception as e:
+            logger.error(f"Error generating follow-up suggestions: {str(e)}")
+            return self._get_fallback_suggestions(user_query)
+    
+    def _get_fallback_suggestions(self, user_query: str) -> list:
+        """
+        Generate fallback follow-up suggestions based on common portfolio topics.
+        """
+        # Categorize the query and provide relevant follow-ups
+        query_lower = user_query.lower()
+        
+        if any(word in query_lower for word in ['project', 'work', 'built', 'created']):
+            return [
+                "What technologies did you use for this project?",
+                "What challenges did you face during development?",
+                "How long did this project take to complete?"
+            ]
+        elif any(word in query_lower for word in ['skill', 'technology', 'tech', 'language']):
+            return [
+                "What projects showcase these skills best?",
+                "How did you learn these technologies?",
+                "What's your preferred tech stack?"
+            ]
+        elif any(word in query_lower for word in ['design', 'ux', 'ui', 'user']):
+            return [
+                "What's your design process like?",
+                "How do you approach user research?",
+                "What design tools do you prefer?"
+            ]
+        else:
+            return [
+                "What projects are you most proud of?",
+                "What technologies do you enjoy working with?",
+                "What's your development process like?"
+            ]
     
     def get_project_by_category(self, category: str) -> List[Project]:
         """

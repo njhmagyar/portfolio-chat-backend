@@ -201,14 +201,96 @@ BODY:
                 message_obj.content
             )
             
+            # Extract relevant media from case study sections
+            media_urls = self.extract_relevant_media(user_message.content, message_obj.content)
+            
             # Save to message
             message_obj.slide_title = slide_title
             message_obj.slide_body = slide_body
-            message_obj.save(update_fields=['slide_title', 'slide_body'])
+            message_obj.slide_media_urls = media_urls
+            message_obj.save(update_fields=['slide_title', 'slide_body', 'slide_media_urls'])
             
-            logger.info(f"Generated slide content for message {message_obj.id}: '{slide_title}'")
+            logger.info(f"Generated slide content for message {message_obj.id}: '{slide_title}' with {len(media_urls)} media items")
             return True
             
         except Exception as e:
             logger.error(f"Error generating slide for message {message_obj.id}: {str(e)}")
             return False
+    
+    def extract_relevant_media(self, user_query: str, ai_response: str) -> list:
+        """
+        Extract relevant media URLs from case study sections based on the conversation context.
+        """
+        try:
+            from .models import Project, CaseStudy, Section
+            
+            media_urls = []
+            query_lower = user_query.lower()
+            response_lower = ai_response.lower()
+            
+            # Search for projects mentioned in the response or query
+            projects = Project.objects.all()
+            relevant_projects = []
+            
+            for project in projects:
+                # Check if project is mentioned by name
+                if (project.title.lower() in response_lower or 
+                    project.title.lower() in query_lower or
+                    any(tech.lower() in response_lower for tech in project.technologies if isinstance(tech, str))):
+                    relevant_projects.append(project)
+            
+            # If no specific projects found, look for keyword matches
+            if not relevant_projects:
+                # Look for general topic matches
+                if any(word in query_lower for word in ['design', 'ui', 'ux', 'interface']):
+                    relevant_projects = projects.filter(case_study__category='design')[:2]
+                elif any(word in query_lower for word in ['development', 'code', 'programming', 'tech']):
+                    relevant_projects = projects.filter(case_study__category='development')[:2]
+                elif any(word in query_lower for word in ['project', 'work', 'portfolio']):
+                    relevant_projects = projects.filter(featured=True)[:3]
+            
+            # Extract media from relevant projects' case study sections
+            for project in relevant_projects:
+                if hasattr(project, 'case_study'):
+                    case_study = project.case_study
+                    
+                    # Add hero image if available
+                    if case_study.hero_image:
+                        media_urls.append(case_study.hero_image)
+                    
+                    # Add media from sections (prioritize certain section types)
+                    sections = case_study.sections.all()
+                    
+                    # Prioritize visual sections
+                    priority_sections = sections.filter(
+                        section_type__in=['design', 'results', 'implementation']
+                    )
+                    
+                    for section in priority_sections:
+                        if section.media_urls:
+                            # Add up to 2 media items per section to avoid overwhelming
+                            media_urls.extend(section.media_urls[:2])
+                    
+                    # If we don't have enough media, add from other sections
+                    if len(media_urls) < 3:
+                        other_sections = sections.exclude(
+                            section_type__in=['design', 'results', 'implementation']
+                        )
+                        for section in other_sections:
+                            if section.media_urls and len(media_urls) < 5:
+                                media_urls.extend(section.media_urls[:1])
+            
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_media = []
+            for url in media_urls:
+                if url and url not in seen:
+                    seen.add(url)
+                    unique_media.append(url)
+            
+            # Limit to 5 images max for performance
+            return unique_media[:5]
+            
+        except Exception as e:
+            logger.error(f"Error extracting media for slide: {str(e)}")
+            return []

@@ -30,17 +30,16 @@ class CaseStudy(models.Model):
     CATEGORY_CHOICES = [
         ('design', 'Design'),
         ('development', 'Development'),
+        ('ux_engineering', 'UX Engineering'),
         ('product', 'Product Management'),
     ]
 
     project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name='case_study')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     hero_image = models.URLField(blank=True, null=True)
-    problem_statement = models.TextField()
-    solution_overview = models.TextField()
-    impact_metrics = models.JSONField(default=list)
-    lessons_learned = models.TextField(blank=True)
-    next_steps = models.TextField(blank=True)
+    title = models.CharField(max_length=200, blank=True, default="")
+    slug = models.SlugField(blank=True, null=True)
+    description = models.TextField()
     
     class Meta:
         verbose_name_plural = "Case studies"
@@ -50,11 +49,13 @@ class CaseStudy(models.Model):
 
 
 class Section(models.Model):
+
     SECTION_TYPES = [
-        ('research', 'Research'),
+        ('overview', 'Overview'),
+        ('context', 'Context'),
+        ('research', 'Research & Discovery'),
         ('design', 'Design Process'),
-        ('development', 'Development'),
-        ('testing', 'Testing & Validation'),
+        ('implementation', 'Implementation'),
         ('results', 'Results & Impact'),
         ('reflection', 'Reflection'),
     ]
@@ -155,6 +156,7 @@ class Message(models.Model):
     # Slide fields for presentation generation
     slide_title = models.CharField(max_length=200, blank=True, null=True)
     slide_body = models.TextField(blank=True, null=True)  # Stores HTML content
+    slide_media_urls = models.JSONField(default=list, blank=True, help_text="Media URLs for slide carousel")
     
     # FAQ source tracking for audio reuse
     source_faq = models.ForeignKey('FAQ', on_delete=models.SET_NULL, blank=True, null=True, 
