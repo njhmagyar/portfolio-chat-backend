@@ -27,6 +27,47 @@ class VoiceService:
             use_speaker_boost=True  # Enhanced clarity
         )
     
+    def generate_audio_with_timestamps(self, text: str) -> tuple[Optional[bytes], Optional[list]]:
+        """
+        Generate audio from text using ElevenLabs TTS with estimated word timestamps.
+        Returns (audio_data, word_timestamps) or (None, None) if generation fails.
+        
+        Note: ElevenLabs doesn't directly provide word-level timestamps in the current SDK,
+        so we'll generate audio and estimate timestamps based on speech rate.
+        """
+        try:
+            if not text or not text.strip():
+                logger.warning("Empty text provided for voice generation")
+                return None, None
+            
+            # Clean the text for better TTS processing
+            cleaned_text = self._clean_text_for_tts(text)
+            
+            # Generate audio using ElevenLabs (standard method)
+            audio_generator = self.client.text_to_speech.convert(
+                voice_id=self.voice_id,
+                text=cleaned_text,
+                voice_settings=self.voice_settings,
+                model_id="eleven_multilingual_v2"
+            )
+            
+            # Collect audio data
+            audio_data = b"".join(audio_generator)
+            
+            if not audio_data:
+                logger.error("No audio data generated")
+                return None, None
+            
+            # Estimate word timestamps based on text analysis and average speech rate
+            word_timestamps = self._estimate_word_timestamps(cleaned_text)
+            
+            logger.info(f"Generated audio with {len(word_timestamps)} estimated word timestamps for text length: {len(text)} chars")
+            return audio_data, word_timestamps
+            
+        except Exception as e:
+            logger.error(f"Error generating audio with timestamps: {str(e)}")
+            return None, None
+
     def generate_audio(self, text: str) -> Optional[bytes]:
         """
         Generate audio from text using ElevenLabs TTS.
@@ -117,6 +158,53 @@ class VoiceService:
         
         return cleaned
     
+    def _estimate_word_timestamps(self, text: str) -> list:
+        """
+        Estimate word-level timestamps based on average speech rate.
+        Returns list of dictionaries with word, start, and end times.
+        """
+        try:
+            import re
+            
+            # Average speech rate: 150-180 words per minute (we'll use 165 WPM)
+            words_per_minute = 165
+            words_per_second = words_per_minute / 60.0
+            
+            # Split text into words, preserving punctuation context for timing
+            words = re.findall(r'\b\w+\b|\S', text)
+            word_timestamps = []
+            
+            current_time = 0.0
+            
+            for word in words:
+                if re.match(r'\b\w+\b', word):  # Actual word
+                    # Base duration for the word (characters influence duration slightly)
+                    base_duration = 1.0 / words_per_second
+                    # Longer words take slightly more time
+                    char_factor = min(len(word) / 6.0, 1.5)  # Cap at 1.5x for very long words
+                    word_duration = base_duration * char_factor
+                    
+                    word_timestamps.append({
+                        'word': word,
+                        'start': round(current_time, 2),
+                        'end': round(current_time + word_duration, 2)
+                    })
+                    
+                    current_time += word_duration
+                    
+                elif word in '.!?':  # Sentence endings get longer pauses
+                    current_time += 0.5
+                elif word in ',;:':  # Shorter pauses for other punctuation
+                    current_time += 0.3
+                elif word in '-()[]':  # Brief pauses for other marks
+                    current_time += 0.1
+            
+            return word_timestamps
+            
+        except Exception as e:
+            logger.error(f"Error estimating word timestamps: {str(e)}")
+            return []
+    
     def get_available_voices(self) -> list:
         """
         Get list of available voices from ElevenLabs.
@@ -163,9 +251,9 @@ class VoiceService:
                 logger.info(f"Message {message_obj.id} is based on FAQ {message_obj.source_faq.id} with audio, copying audio file")
                 return self._copy_faq_audio_to_message(message_obj.source_faq, message_obj)
             
-            # Generate new audio if no source FAQ or FAQ has no audio
+            # Generate new audio with timestamps if no source FAQ or FAQ has no audio
             start_time = timezone.now()
-            audio_data = self.generate_audio(text)
+            audio_data, word_timestamps = self.generate_audio_with_timestamps(text)
             
             if not audio_data:
                 logger.error("Failed to generate audio data")
@@ -185,6 +273,7 @@ class VoiceService:
             # Update audio metadata
             message_obj.audio_generated_at = timezone.now()
             message_obj.audio_generation_time_ms = generation_time_ms
+            message_obj.audio_word_timestamps = word_timestamps or []
             message_obj.save()
             
             if message_obj.source_faq:
@@ -254,6 +343,7 @@ class VoiceService:
             # Copy audio metadata from FAQ (use original generation time)
             message_obj.audio_generated_at = timezone.now()
             message_obj.audio_generation_time_ms = faq_obj.audio_generation_time_ms or 0
+            message_obj.audio_word_timestamps = faq_obj.audio_word_timestamps or []
             message_obj.save()
             
             logger.info(f"Successfully copied audio from FAQ {faq_obj.id} to message {message_obj.id}")
@@ -281,9 +371,9 @@ class VoiceService:
                 logger.info(f"Audio already exists for FAQ {faq_obj.id}")
                 return True
             
-            # Generate audio
+            # Generate audio with timestamps
             start_time = timezone.now()
-            audio_data = self.generate_audio(text)
+            audio_data, word_timestamps = self.generate_audio_with_timestamps(text)
             
             if not audio_data:
                 logger.error("Failed to generate audio data for FAQ")
@@ -303,6 +393,7 @@ class VoiceService:
             # Update audio metadata
             faq_obj.audio_generated_at = timezone.now()
             faq_obj.audio_generation_time_ms = generation_time_ms
+            faq_obj.audio_word_timestamps = word_timestamps or []
             faq_obj.save()
             
             logger.info(f"Generated and saved audio for FAQ {faq_obj.id}, time: {generation_time_ms}ms")

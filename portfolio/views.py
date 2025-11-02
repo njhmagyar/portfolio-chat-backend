@@ -136,7 +136,8 @@ def chat_query(request):
                 response_time_ms=response_time_ms,
                 token_count=estimated_tokens,
                 response_length=response_length,
-                source_faq=source_faq  # Track which FAQ was used as source
+                source_faq=source_faq,  # Track which FAQ was used as source
+                follow_up_suggestions=follow_up_suggestions  # Save follow-up suggestions
             )
             
             # Generate slide content for the AI response
@@ -272,6 +273,9 @@ def conversation_history(request, session_id):
                 'audio_url': voice_service.get_audio_url_for_message(message) if message.has_audio else None,
                 'slide_title': message.slide_title,
                 'slide_body': message.slide_body,
+                'slide_media_urls': message.slide_media_urls,
+                'audio_word_timestamps': message.audio_word_timestamps,
+                'follow_up_suggestions': message.follow_up_suggestions,
             }
             messages_data.append(message_data)
         
@@ -468,7 +472,8 @@ def generate_message_audio(request):
             'message_id': message_id,
             'audio_url': audio_url,
             'has_audio': message.has_audio,
-            'generation_time_ms': message.audio_generation_time_ms
+            'generation_time_ms': message.audio_generation_time_ms,
+            'audio_word_timestamps': message.audio_word_timestamps
         })
         
     except json.JSONDecodeError:

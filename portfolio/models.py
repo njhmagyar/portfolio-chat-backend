@@ -96,6 +96,7 @@ class FAQ(models.Model):
     audio_file = models.FileField(upload_to='faq_audio/', blank=True, null=True)
     audio_generated_at = models.DateTimeField(blank=True, null=True)
     audio_generation_time_ms = models.PositiveIntegerField(blank=True, null=True)
+    audio_word_timestamps = models.JSONField(default=list, blank=True, help_text="Word-level timestamps for audio synchronization")
     
     class Meta:
         ordering = ['-priority', '-created_at']
@@ -152,6 +153,7 @@ class Message(models.Model):
     audio_file = models.FileField(upload_to='voice_audio/', blank=True, null=True)
     audio_generated_at = models.DateTimeField(blank=True, null=True)
     audio_generation_time_ms = models.PositiveIntegerField(blank=True, null=True)
+    audio_word_timestamps = models.JSONField(default=list, blank=True, help_text="Word-level timestamps for audio synchronization")
     
     # Slide fields for presentation generation
     slide_title = models.CharField(max_length=200, blank=True, null=True)
@@ -161,6 +163,9 @@ class Message(models.Model):
     # FAQ source tracking for audio reuse
     source_faq = models.ForeignKey('FAQ', on_delete=models.SET_NULL, blank=True, null=True, 
                                    help_text="FAQ that was used as the source for this response")
+    
+    # Follow-up suggestions for user engagement
+    follow_up_suggestions = models.JSONField(default=list, blank=True, help_text="Follow-up questions suggested by the AI")
     
     class Meta:
         ordering = ['order_in_session']
