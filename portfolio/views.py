@@ -206,12 +206,12 @@ def projects_list(request):
                 'featured': project.featured,
                 'logo': logo_url,
                 'created_at': project.created_at.isoformat(),
+                'case_studies': []
             }
             
             # Include case study if it exists
-            if hasattr(project, 'case_study'):
-                case_study = project.case_study
-                project_data['case_study'] = {
+            for case_study in project.case_studies.all():
+                project_data['case_studies'] += {
                     'category': case_study.category,
                     'hero_image': case_study.hero_image,
                     'problem_statement': case_study.problem_statement,
@@ -219,20 +219,17 @@ def projects_list(request):
                     'impact_metrics': case_study.impact_metrics,
                     'lessons_learned': case_study.lessons_learned,
                     'next_steps': case_study.next_steps,
+                    'sections': [
+                        {
+                            'title': section.title,
+                            'section_type': section.section_type,
+                            'content': section.content,
+                            'order': section.order,
+                            'media_urls': section.media_urls,
+                        }
+                        for section in case_study.sections.all()
+                    ]
                 }
-                
-                # Include sections
-                sections = case_study.sections.all()
-                project_data['case_study']['sections'] = [
-                    {
-                        'title': section.title,
-                        'section_type': section.section_type,
-                        'content': section.content,
-                        'order': section.order,
-                        'media_urls': section.media_urls,
-                    }
-                    for section in sections
-                ]
             
             projects_data.append(project_data)
         

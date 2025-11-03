@@ -36,8 +36,7 @@ Featured: {'Yes' if project.featured else 'No'}
 """
             
             # Add case study information if available
-            if hasattr(project, 'case_study'):
-                case_study = project.case_study
+            for case_study in project.case_studies.all():
                 project_context += f"""
 CASE STUDY:
 Title: {case_study.title}

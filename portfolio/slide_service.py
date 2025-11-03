@@ -251,9 +251,7 @@ BODY:
             
             # Extract media from relevant projects' case study sections
             for project in relevant_projects:
-                if hasattr(project, 'case_study'):
-                    case_study = project.case_study
-                    
+                for case_study in project.case_studies.all():
                     # Add hero image if available
                     if case_study.hero_image:
                         media_urls.append(case_study.hero_image)
