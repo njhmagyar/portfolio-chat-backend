@@ -118,10 +118,10 @@ class FAQAdmin(admin.ModelAdmin):
     )
 
 
-class MessageInline(admin.TabularInline):
+class MessageInline(admin.StackedInline):
     model = Message
     extra = 0
-    fields = ['message_type', 'content', 'source_faq', 'response_length', 'timestamp', 'response_time_ms', 'token_count']
+    fields = ['message_type', 'content', 'follow_up_suggestions', 'source_faq', 'response_length', 'timestamp', 'response_time_ms', 'token_count']
     readonly_fields = ['timestamp']
     ordering = ['order_in_session']
 
@@ -156,7 +156,7 @@ class ConversationAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
     list_display = ['conversation_short', 'message_type', 'order_in_session', 'response_length', 'has_audio_display', 'source_faq_short', 'timestamp']
     list_filter = ['message_type', 'response_length', 'timestamp']
-    search_fields = ['conversation__session_id', 'content']
+    search_fields = ['conversation__session_id', 'content', 'follow_up_suggestions']
     readonly_fields = ['timestamp', 'audio_generated_at', 'audio_generation_time_ms']
     
     def conversation_short(self, obj):
@@ -180,7 +180,7 @@ class MessageAdmin(admin.ModelAdmin):
             'fields': ('conversation', 'message_type', 'order_in_session', 'response_length', 'timestamp')
         }),
         ('Content', {
-            'fields': ('content',)
+            'fields': ('content', 'follow_up_suggestions')
         }),
         ('Source & Audio', {
             'fields': ('source_faq', 'audio_file', 'audio_generated_at', 'audio_generation_time_ms'),
