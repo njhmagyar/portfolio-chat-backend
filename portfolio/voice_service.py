@@ -21,10 +21,11 @@ class VoiceService:
         # Nathan's voice profile - professional, friendly male voice
         self.voice_id = settings.ELEVENLABS_VOICE_ID
         self.voice_settings = VoiceSettings(
-            stability=0.8,      # High stability for consistent voice
-            similarity_boost=0.8,  # High similarity for natural sound
-            style=0.3,          # Moderate style for conversational tone
-            use_speaker_boost=True  # Enhanced clarity
+            stability=0.9,      # High stability for consistent voice
+            similarity_boost=0.5,  # High similarity for natural sound
+            speed=0.91,
+            style=0,          # Moderate style for conversational tone
+            # use_speaker_boost=True  # Enhanced clarity
         )
     
     def generate_audio_with_timestamps(self, text: str) -> tuple[Optional[bytes], Optional[list]]:
@@ -48,7 +49,7 @@ class VoiceService:
                 voice_id=self.voice_id,
                 text=cleaned_text,
                 voice_settings=self.voice_settings,
-                model_id="eleven_multilingual_v2"
+                model_id="eleven_flash_v2_5"
             )
             
             # Collect audio data

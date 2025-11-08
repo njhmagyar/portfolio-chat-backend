@@ -203,7 +203,7 @@ Remember: Accuracy over helpfulness. If you don't have the specific information 
         """
         try:
             # Create a simple prompt for generating follow-up suggestions
-            follow_up_prompt = f"""Based on this conversation, suggest 2-3 brief follow-up questions that would naturally continue the conversation about Nathan Magyar's portfolio and work. Focus on related projects, technologies, or process details.
+            follow_up_prompt = f"""Based on this conversation, suggest 2 brief follow-up questions that would naturally continue the conversation about the same project. Use the project name in the question. Then, create a third question. It can be about a different project, referenced specifcally by name, or a more general question about Nathan's skills, experience, technologies, or process details.
 
 User asked: "{user_query}"
 Response given: "{response_text[:300]}..."
