@@ -9,7 +9,10 @@ from django.db import transaction
 from django.core.cache import cache
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework import generics, status
+from rest_framework.response import Response
 from .models import Project, CaseStudy, Section, Conversation, Message, FAQ
+from .serializers import CaseStudySerializer
 from .services import PortfolioLLMService
 from .utils import validate_message_content, is_suspicious_pattern, get_client_ip
 from .voice_service import VoiceService
@@ -670,3 +673,26 @@ def case_studies_list(request):
             'case_studies': [],
             'count': 0
         }, status=500)
+
+
+# DRF Class-based views
+class CaseStudyListView(generics.ListAPIView):
+    """
+    DRF API endpoint to return all case studies with their project information.
+    """
+    serializer_class = CaseStudySerializer
+    pagination_class = None
+    
+    def get_queryset(self):
+        return CaseStudy.objects.select_related('project').prefetch_related('sections').order_by('-project__created_at')
+
+
+class CaseStudyDetailView(generics.RetrieveAPIView):
+    """
+    DRF API endpoint to return a specific case study with full details.
+    """
+    serializer_class = CaseStudySerializer
+    lookup_field = 'slug'
+    
+    def get_queryset(self):
+        return CaseStudy.objects.select_related('project').prefetch_related('sections')
