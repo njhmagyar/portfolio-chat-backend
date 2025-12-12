@@ -1,0 +1,210 @@
+{
+  "resume": {
+    "title": "Nathan Haynes-Magyar",
+    "subtitle": "Product Designer & Full-Stack Developer",
+    "summary": "Technical designer who combines design thinking with full-stack development expertise to build user-centered, high-performing web applications. 8 years shipping products from 0-to-1 and optimizing at scale (200K+ users), including recent work with conversational AI interfaces and LLM-powered experiences. Skilled at leading cross-functional teams and driving measurable impact through evidence-based design.",
+    "file_url": "https://example.com/nathan-resume.pdf",
+    "published": true
+  },
+  "skill_categories": [
+    {
+      "name": "Technical",
+      "order": 1,
+      "skills": [
+        {"name": "HTML", "order": 1},
+        {"name": "CSS", "order": 2},
+        {"name": "JavaScript (Vue.js)", "order": 3},
+        {"name": "TypeScript", "order": 4},
+        {"name": "Python (Django)", "order": 5},
+        {"name": "Ruby (Ruby on Rails)", "order": 6}
+      ]
+    },
+    {
+      "name": "Tools",
+      "order": 2,
+      "skills": [
+        {"name": "Claude Code", "order": 1},
+        {"name": "Cursor", "order": 2},
+        {"name": "Figma", "order": 3},
+        {"name": "Adobe Illustrator", "order": 4},
+        {"name": "Adobe After Effects", "order": 5}
+      ]
+    },
+    {
+      "name": "Research",
+      "order": 3,
+      "skills": [
+        {"name": "Contextual inquiry", "order": 1},
+        {"name": "Card Sorting", "order": 2},
+        {"name": "Surveys", "order": 3},
+        {"name": "Usability Testing", "order": 4},
+        {"name": "Design Jams", "order": 5},
+        {"name": "Affinity Mapping", "order": 6}
+      ]
+    },
+    {
+      "name": "Design",
+      "order": 4,
+      "skills": [
+        {"name": "Journey Mapping", "order": 1},
+        {"name": "Wireframing", "order": 2},
+        {"name": "Prototyping", "order": 3},
+        {"name": "Information Architecture", "order": 4},
+        {"name": "Design Systems", "order": 5}
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "company_name": "Self-Employed",
+      "job_title": "Product Designer & Full-Stack Developer",
+      "start_date": "2020-01-01",
+      "end_date": null,
+      "order": 1,
+      "bullets": [
+        {
+          "content": "<p><strong>Built and launched Twirlmate competition management system</strong> using Vue.js and Django for 1,778+ users across 6 stakeholder types, generating $82K revenue through user-centered design</p>",
+          "order": 1
+        },
+        {
+          "content": "<p><strong>Designed and developed multi-step user journey</strong> (signup, registration, payment) with 88.6% completion rate - outperforming industry average cart abandonment rate by 150%+</p>",
+          "order": 2
+        },
+        {
+          "content": "<p><strong>Integrated Spektrix ticketing API</strong> into professional theatre website, building Vue.js event calendar and custom CSS for branded purchasing experience ($900K+ revenue/yr and 40K+ ticket sales/yr for 4 yrs)</p>",
+          "order": 3
+        },
+        {
+          "content": "<p><strong>Led mobile UX redesign</strong> in Figma, increasing usability from 'below average' to 'excellent' rating (SUS: 65→89), reducing friction by 3.5 minutes in critical registration funnel through evidence-based design</p>",
+          "order": 4
+        },
+        {
+          "content": "<p><strong>Prototyped and deployed conversational product design portfolio</strong> powered by separate Vue.js SPA and Django backend, using ElevenLabs voice clone and OpenAI LLM</p>",
+          "order": 5
+        },
+        {
+          "content": "<p><strong>Created TypeScript MCP server</strong> automating project bootstrapping (directory creation, git init, GitHub repo setup) with robust error handling, accelerating setup for 3+ projects</p>",
+          "order": 6
+        },
+        {
+          "content": "<p><strong>Designed and built an interactive coding platform</strong> with intelligent help features that reduced frustration without inhibiting learning, and scaffolded problem types to boost learner engagement.</p>",
+          "order": 7
+        }
+      ]
+    },
+    {
+      "company_name": "Center for Academic Innovation",
+      "job_title": "Lead Software Developer",
+      "start_date": "2023-07-01",
+      "end_date": null,
+      "order": 2,
+      "bullets": [
+        {
+          "content": "<p><strong>Implemented new design system</strong> using modular LESS stylesheets and reusable Django patterns for an online learning catalog featuring 300+ courses and serving 200K+ account holders</p>",
+          "order": 1
+        },
+        {
+          "content": "<p><strong>Rebuilt extracurricular experience tracking flow</strong> to enable immediate completion, driving 7.4x increase in pilot submissions (5→37 completions) by eliminating unnecessary planning steps</p>",
+          "order": 2
+        },
+        {
+          "content": "<p><strong>Partnered with designer and behavioral scientist</strong> to rebuild monthly engagement emails for 4,000 engineering students, developing 9-segment user bucketing system in Ruby on Rails that prioritized single next-actions and increased competency level-up requests by 125% (52→117)</p>",
+          "order": 3
+        },
+        {
+          "content": "<p><strong>Unblocked 2-year backlogged microsite initiative</strong> by scoping MVP solution and aligning stakeholders, delivering full-stack Django/Vue feature in 4 weeks that enabled external content partnerships and informed requirements for production-scale platform expansion (232K pilot page views)</p>",
+          "order": 4
+        },
+        {
+          "content": "<p><strong>Led 6-person team</strong> (designers, developers, behavioral scientist) to deliver School of Public Health Spire pilot, building custom competency mapping visualizations and automation scripts that connected 229 sub-competencies across 34 careers for 220 students</p>",
+          "order": 5
+        }
+      ]
+    },
+    {
+      "company_name": "Center for Academic Innovation",
+      "job_title": "Senior Software Developer",
+      "start_date": "2021-07-01",
+      "end_date": "2023-06-30",
+      "order": 3,
+      "bullets": [
+        {
+          "content": "<p><strong>Built foundational Storybook component library</strong> with 2 designers and 2 developers, creating 9 core components that scaled across 74 application components</p>",
+          "order": 1
+        },
+        {
+          "content": "<p><strong>Resolved critical application crash</strong> affecting 65+ high-enrollment courses (100-887 students), refactoring 4 deeply nested Rails subqueries to reduce load time from 2 minutes to 10 seconds</p>",
+          "order": 2
+        },
+        {
+          "content": "<p><strong>Built QA analytics dashboard</strong> (Django/Vue.js) integrating Trello API and 7K+ historical QA cards across 10 projects, uncovering 2+ year-old bugs and enabling data-driven release decisions</p>",
+          "order": 3
+        }
+      ]
+    },
+    {
+      "company_name": "Center for Academic Innovation",
+      "job_title": "Senior UX Designer & Frontend Developer",
+      "start_date": "2019-01-01",
+      "end_date": "2021-06-30",
+      "order": 4,
+      "bullets": [
+        {
+          "content": "<p><strong>Designed and built audience-segmented landing pages</strong> (Django/Vue) for students, alumni, and staff that drove 17K+ page views and established foundation for dynamic content personalization, enabling future logged-in user experiences based on UM community member type</p>",
+          "order": 1
+        },
+        {
+          "content": "<p><strong>Facilitated design thinking workshop</strong> (3 designers, 3 learning experience designers, 2 developers) to design goal-setting tool now used by 30K+ Coursera learners/year to increase course completion rates</p>",
+          "order": 2
+        },
+        {
+          "content": "<p><strong>Supervised an early-career designer and 3 design interns</strong> to provide guidance on design principles and product lifecycle steps, increasing team design output and intern program satisfaction</p>",
+          "order": 3
+        },
+        {
+          "content": "<p><strong>Created and led professional development workshops</strong> on typography, color, accessibility, etc</p>",
+          "order": 4
+        }
+      ]
+    },
+    {
+      "company_name": "Center for Academic Innovation",
+      "job_title": "UX Designer & Frontend Developer",
+      "start_date": "2017-05-01",
+      "end_date": "2018-12-31",
+      "order": 5,
+      "bullets": [
+        {
+          "content": "<p><strong>Designed and built course discovery system from scratch</strong> (Vue.js/Django), creating search with autocomplete, subject-based navigation, and recommendation features across 344 catalog items that scaled enrollments 720% (6.5K→53.6K/year) pre-pandemic</p>",
+          "order": 1
+        },
+        {
+          "content": "<p><strong>Managed and mentored two summer UX fellows</strong>, documenting full-stack development processes and enabling autonomous 2-month design/build of list and detail pages for 262 faculty profiles</p>",
+          "order": 2
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "title": "UX/UI for AI Products (7-week course)",
+      "subtitle": "Stanford University",
+      "order": 1
+    },
+    {
+      "title": "M.S. in Information Human-Computer Interaction",
+      "subtitle": "University of Michigan, Ann Arbor",
+      "order": 2
+    },
+    {
+      "title": "B.A. Organizational Studies and Spanish",
+      "subtitle": "University of Michigan, Ann Arbor",
+      "order": 3
+    },
+    {
+      "title": "B.F.A. Performance Acting",
+      "subtitle": "University of Michigan, Ann Arbor",
+      "order": 4
+    }
+  ]
+}

@@ -30,6 +30,7 @@ def hello_world(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/hello/', hello_world, name='hello'),
+    path('api/resume/', include('resume.urls')),
     path('', include('portfolio.urls')),
     path('', hello_world, name='home'),
 ]
