@@ -50,7 +50,7 @@ Hero Image: {case_study.hero_image or 'None'}
                 if sections:
                     project_context += "\nSECTIONS:\n"
                     for section in sections:
-                        project_context += f"- {section.title} ({section.section_type}): {section.content}\n"
+                        project_context += f"- {section.title} ({section.section_type}): {section.content}\n{section.context}\n"
             
             context_parts.append(project_context)
         

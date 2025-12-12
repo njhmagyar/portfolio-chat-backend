@@ -5,7 +5,7 @@ from .models import Project, CaseStudy, Section, FAQ, Conversation, Message
 class SectionInline(admin.StackedInline):
     model = Section
     extra = 1
-    fields = ['title', 'section_type', 'order', 'content', 'media_urls']
+    fields = ['title', 'section_type', 'order', 'content', 'context', 'media_urls']
 
 
 class CaseStudyInline(admin.StackedInline):
@@ -62,7 +62,7 @@ class CaseStudyAdmin(admin.ModelAdmin):
 class SectionAdmin(admin.ModelAdmin):
     list_display = ['title', 'case_study', 'section_type', 'order']
     list_filter = ['section_type', 'case_study__category']
-    search_fields = ['title', 'content', 'case_study__project__title']
+    search_fields = ['title', 'content', 'context', 'case_study__project__title']
     list_editable = ['order']
     
     fieldsets = (
@@ -70,7 +70,7 @@ class SectionAdmin(admin.ModelAdmin):
             'fields': ('case_study', 'title', 'section_type', 'order')
         }),
         ('Content', {
-            'fields': ('content',)
+            'fields': ('content', 'context',)
         }),
         ('Media', {
             'fields': ('media_urls',),

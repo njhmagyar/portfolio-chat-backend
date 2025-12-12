@@ -214,11 +214,7 @@ def projects_list(request):
                 project_data['case_studies'] += {
                     'category': case_study.category,
                     'hero_image': case_study.hero_image,
-                    'problem_statement': case_study.problem_statement,
-                    'solution_overview': case_study.solution_overview,
-                    'impact_metrics': case_study.impact_metrics,
-                    'lessons_learned': case_study.lessons_learned,
-                    'next_steps': case_study.next_steps,
+                    'description': case_study.description,
                     'sections': [
                         {
                             'title': section.title,
@@ -606,3 +602,71 @@ def featured_questions(request):
             'source': 'fallback',
             'count': 4
         })
+
+
+@require_http_methods(["GET"])
+def case_studies_list(request):
+    """
+    API endpoint to return all case studies with their project information.
+    """
+    try:
+        case_studies = CaseStudy.objects.select_related('project').all().order_by('-project__created_at')
+        
+        case_studies_data = []
+        for case_study in case_studies:
+            # Get project logo URL if it exists
+            logo_url = None
+            if case_study.project.logo:
+                try:
+                    logo_url = request.build_absolute_uri(case_study.project.logo.url)
+                except ValueError:
+                    # Handle case where logo file doesn't exist
+                    logo_url = None
+            
+            # Get sections for this case study
+            sections = []
+            for section in case_study.sections.all().order_by('order'):
+                sections.append({
+                    'id': section.id,
+                    'title': section.title,
+                    'section_type': section.section_type,
+                    'content': section.content,
+                    'order': section.order,
+                    'media_urls': section.media_urls,
+                })
+            
+            case_study_data = {
+                'id': case_study.id,
+                'title': case_study.title or case_study.project.title,
+                'slug': case_study.slug or case_study.project.slug,
+                'description': case_study.description,
+                'category': case_study.category,
+                'hero_image': case_study.hero_image,
+                'sections': sections,
+                'project': {
+                    'id': case_study.project.id,
+                    'title': case_study.project.title,
+                    'slug': case_study.project.slug,
+                    'summary': case_study.project.summary,
+                    'role': case_study.project.role,
+                    'timeline': case_study.project.timeline,
+                    'technologies': case_study.project.technologies,
+                    'featured': case_study.project.featured,
+                    'logo': logo_url,
+                    'created_at': case_study.project.created_at.isoformat(),
+                }
+            }
+            case_studies_data.append(case_study_data)
+        
+        return JsonResponse({
+            'case_studies': case_studies_data,
+            'count': len(case_studies_data)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching case studies: {str(e)}")
+        return JsonResponse({
+            'error': 'Failed to fetch case studies',
+            'case_studies': [],
+            'count': 0
+        }, status=500)

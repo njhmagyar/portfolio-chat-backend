@@ -64,6 +64,7 @@ class Section(models.Model):
     title = models.CharField(max_length=200)
     section_type = models.CharField(max_length=20, choices=SECTION_TYPES)
     content = models.TextField()
+    context = models.TextField(blank=True, default="")
     order = models.PositiveIntegerField(default=0)
     media_urls = models.JSONField(default=list, blank=True)
     
