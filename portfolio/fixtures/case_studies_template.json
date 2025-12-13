@@ -1,0 +1,95 @@
+{
+  "case_studies": [
+    {
+      "project_slug": "project-slug-here",
+      "category": "design",
+      "hero_image": "https://example.com/hero-image.jpg",
+      "title": "Case Study Title (optional - will use project title if empty)",
+      "slug": "case-study-slug (optional - will use project slug if empty)",
+      "description": "Brief description of the case study and what it covers",
+      "sections": [
+        {
+          "title": "Overview",
+          "section_type": "overview",
+          "content": "Detailed content for the overview section. This should be comprehensive and well-formatted.",
+          "context": "Additional context information for this section (optional)",
+          "order": 1,
+          "media_urls": [
+            "https://example.com/image1.jpg",
+            "https://example.com/image2.jpg"
+          ]
+        },
+        {
+          "title": "Project Context",
+          "section_type": "context",
+          "content": "Background information about the project, stakeholders, constraints, and initial requirements.",
+          "context": "",
+          "order": 2,
+          "media_urls": []
+        },
+        {
+          "title": "Research & Discovery",
+          "section_type": "research",
+          "content": "Details about user research, competitive analysis, stakeholder interviews, and discovery phase activities.",
+          "context": "",
+          "order": 3,
+          "media_urls": [
+            "https://example.com/research-image.jpg"
+          ]
+        },
+        {
+          "title": "Design Process",
+          "section_type": "design",
+          "content": "Information about the design methodology, wireframes, prototypes, and design decisions.",
+          "context": "",
+          "order": 4,
+          "media_urls": []
+        },
+        {
+          "title": "Implementation",
+          "section_type": "implementation",
+          "content": "Technical implementation details, development approach, tools used, and challenges overcome.",
+          "context": "",
+          "order": 5,
+          "media_urls": []
+        },
+        {
+          "title": "Results & Impact",
+          "section_type": "results",
+          "content": "Measurable outcomes, user feedback, business impact, and success metrics.",
+          "context": "",
+          "order": 6,
+          "media_urls": [
+            "https://example.com/results-chart.png"
+          ]
+        },
+        {
+          "title": "Reflection",
+          "section_type": "reflection",
+          "content": "Lessons learned, what would be done differently, and key takeaways from the project.",
+          "context": "",
+          "order": 7,
+          "media_urls": []
+        }
+      ]
+    }
+  ],
+  "field_reference": {
+    "case_study": {
+      "project_slug": "String - Must match an existing project slug",
+      "category": "String - One of: 'design', 'development', 'ux_engineering', 'product'",
+      "hero_image": "String (URL) - Optional hero image URL",
+      "title": "String - Optional case study title (uses project title if empty)",
+      "slug": "String - Optional slug (uses project slug if empty)",
+      "description": "String - Brief description of the case study"
+    },
+    "section": {
+      "title": "String - Section title",
+      "section_type": "String - One of: 'overview', 'context', 'research', 'design', 'implementation', 'results', 'reflection'",
+      "content": "String - Main content for the section (supports HTML)",
+      "context": "String - Optional additional context",
+      "order": "Integer - Display order (starting from 1)",
+      "media_urls": "Array of strings - URLs to images/videos for this section"
+    }
+  }
+}

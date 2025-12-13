@@ -48,6 +48,19 @@ class CaseStudy(models.Model):
         return f"Case Study: {self.project.title}"
 
 
+class Metric(models.Model):
+    case_study = models.ForeignKey(CaseStudy, on_delete=models.CASCADE, related_name='metrics')
+    value = models.CharField(max_length=10)
+    label = models.CharField(max_length=100)
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return f"{self.number} {self.label} - {self.case_study.project.title}"
+
+
 class Section(models.Model):
 
     SECTION_TYPES = [

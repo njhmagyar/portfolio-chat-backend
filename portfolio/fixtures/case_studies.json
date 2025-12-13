@@ -1,0 +1,151 @@
+{
+  "case_studies": [
+    {
+      "project_slug": "twirlmate",
+      "category": "ux-engineering",
+      "hero_image": "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-schedule-edit-2.png",
+      "title": "Automating Baton Twirling Contest Schedules",
+      "slug": "twirlmate-schedule-builder",
+      "description": "After interviewing event organizers and studying the schedules they created, I designed and built a schedule building wizard to automate this process.",
+      "metrics": [
+        {
+          "value": "50",
+          "label": "hours-saved"
+        },
+        {
+          "value": "4K+",
+          "label": "performances auto-generated"
+        }
+      ],
+      "sections": [
+        {
+          "title": "The 50-Hour Problem That Sparked a Solution",
+          "section_type": "overview",
+          "content": "Baton twirling contest organizers were spending 50+ hours manually creating schedules in Excel, juggling complex constraints while prone to costly errors. I designed and built an automated schedule wizard that reduced this process to under 3 hours while eliminating conflicts.",
+          "context": "Scheduling performances is the most time-consuming and complex part of planning a baton contest. Prior to Twirlmate’s schedule builder, event organizers spent 50+ hours in Excel making sure each athlete’s performances were spread out, that they weren’t going to be judged by their own coach, and that they had different judges for each of their events. After interviewing event organizers and studying the schedules they created, I designed and built a schedule building wizard to automate this process. As a result, event organizers could build a schedule with 1,250 performances for 250 athletes, grouped by age and skill level into 250 events, in less than 3 hours.",
+          "order": 1,
+          "media_urls": [
+            "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-excel-tracking.png"
+          ]
+        },
+        {
+          "title": "When Excel Becomes Your Enemy",
+          "section_type": "context",
+          "content": "Contests involve 250-1,250 performances across multiple lanes with strict timing and judging constraints that organizers manually tracked in spreadsheets. The complexity increased exponentially with last-minute changes, causing even experienced organizers to miss conflicts and schedule athletes incorrectly.",
+          "context": "Contests can range in size from 50 to 250 athletes, with each person competing in 5 events on average (solo, marching, duet, 2-baton, 3-baton, etc). To get through the resulting 250-1,250 performances most quickly and efficiently, event organizers create 6-10 'lanes', on which multiple events run simultaneously. But this is where things start to get complex: more lanes doesn't necessarily equal a smoother contest. Past a certain point, performances will start to appear too close together, increasing the number of time conflicts. According to competition rules, athletes must have a minimum of 5 minutes between their own performances. They also cannot be evaluated by their own coach. In addition to these 'hard' scheduling rules, there are other unwritten requirements such as: grouping events in a conventional way (e.g. all modeling events occur first thing in the morning to allow for hair and makeup preparation; all marching events also occur in their own block of time so that traditional march music can be used). 'Nice to have' constraints include minimizing repeat judging assignments for athletes, so they get more diverse feedback, putting open (low stakes) events before title (high stakes) events so athletes can 'warm up' before more important performances, and assigning certain events to specific judges who have particular expertise. Making all of this happen in Excel was painstaking for event organizers. First, they had to assemble event line-ups from Google form submissions to determine who was competing in each division. Then, they copied line-ups one by one into the schedule, scanning for timing or judging conflicts as they went. Most organizers are not strong Excel users, so they didn't utilize functions to highlight timing errors. After doing their best to minimize issues, they shared the schedule with coaches and parents for review. Despite spending 50+ hours putting together a first draft, it wasn't uncommon for a few athletes' performances to be missing or improperly scheduled. Further complicating this process were unavoidable last-minute changes to an athlete's division, which inserted new conflicts with each change.",
+          "order": 2,
+          "media_urls": []
+        },
+        {
+          "title": "Uncovering the Pain Behind the Process",
+          "section_type": "research",
+          "content": "Through interviews with three event organizers, I discovered they spent 40+ hours each on manual data entry and conflict resolution using outdated 1990s software. The real breakthrough came from understanding that organizers wanted control and flexibility, not just automation.",
+          "context": "Being a competitor in the sport for 13 years, I understood a lot about how schedules looked and worked. They utilized a spreadsheet layout, grouped certain events into blocks, and arranged blocks in a standard order (modeling, marching, twirling). But, I had never created a schedule myself. So I interviewed 3 event organizers about their process. Key insights included: The diverse ways event organizers wanted to order contestants in the line-up (random, by last name, by registration date, etc). Their desire to schedule low stakes events before high stakes events to allow for 'warm-up' performances. The need to ensure unique judge assignments for each discipline in multi-part events. Two organizers also spoke about an existing piece of software they used for scheduling, which was written specifically for twirling. Known as the 'Access Program,' it was written in Microsoft Access in the 1990's. Despite offering a drag-and-drop spreadsheet UI that signaled conflicts and the ability to print final schedules, the program was described by organizers as dated, clunky, and only intuitive to longtime power users. New users relied heavily on experts, 'I go back and forth a lot with Carol since she knows the system so well. It usually takes about 40 hours between the two of us.' Another major drawback of the Access Program was the large amount of upfront manual data entry it required. 'Every year, I have to enter each athlete's name, age, and gender, even if they competed last year. Then I enter their registration information from their form submission. Once that's done, I have all the divisions populated and I can start scheduling.' All of this manual data entry is where 50% or more of organizer's time was being spent. The other half went to resolving conflicts and dealing with the fallout of last-minute division changes.",
+          "order": 3,
+          "media_urls": []
+        },
+        {
+          "title": "Building a Wizard That Thinks Like an Organizer",
+          "section_type": "design",
+          "content": "I designed a step-by-step wizard that broke schedule creation into digestible chunks while shifting data entry responsibility from organizers to attendees. Real-time testing with live data revealed critical insights about spacing rules and the need for easy regeneration.",
+          "context": "After the interviews, I mapped out the attributes of a schedule and broke them down into bite-sized steps for a wizard flow: Basic info (schedule name, date, minimum space between performances, lineup ordering method) Venue info (gym name, number of lanes) Lane assignments (putting judges on specific lanes) Outline (defining event blocks and discipline order within each block) Then, once an organizer submitted their outline, I planned to automate the actual schedule building based on the provided constraints. The algorithm would go block by block. Within each block, it would follow the prescribed discipline order, assigning each event to an eligible lane (no coach conflicts) with the fewest number of performances, and each contestant to a particular order. After the full schedule was drafted, the organizer would then revise it, addressing any time conflicts. From the schedule detail page, organizers could also add other events to a specific block/lane, add/remove athletes, reorder events/athletes, and print/publish the final result. It felt important to retain a lot of manual functionality, to preserve control and flexibility for the organizer. The upfront manual data entry was addressed by shifting this responsibility from organizers to attendees. Prior to scheduling, organizers defined their events and prices, and created a Google form-like page for attendees to complete. Then, parents and coaches created Twirlmate accounts and athlete profiles, which they then used in completing a contest registration form. Upon successful payment, Twirlmate added each athlete to the appropriate divisions for the contest. The data needed for scheduling (which athletes are in which event/division) was therefore instantly ready for use. Because I already had real organizers using the system before this feature was complete, I did not design a prototype before starting to build. Instead, I worked directly in code to produce an MVP solution, which I then tested with live data and organizer feedback. Instantly testing the feature with real data and users was a great way to get realistic, rapid feedback. Key insights included: The need to customize spacing rules per event block (some blocks required less time between performances than others). The need to easily start over or regenerate a schedule, without having to fill out the entire wizard again. The need to avoid coach conflicts for athletes with incomplete coach information. I addressed this challenges by: Moving the spacing rule to be associated with event blocks, not the schedule as a whole. Making the outline/generating view easily accessible from the schedule detail page via a two-tab layout (e.g., schedule and outline). Adding a 'coach name' field to athlete profiles, so parents could type in a coach name if someone wasn't available for choosing in the system. I then detected coach conflicts based on account IDs or plain text name matches. I introduced the above changes over time, focusing on the most impactful change I could make at the time for each contest and deprioritizing 'nice to have' improvements. For example, schedule printing was only available in Google Chrome due to certain CSS limitations. Rather than achieving full cross-browser support, I set clear expectations with organizers about only using Chrome for the time being and instead focused on changing the spacing rule.",
+          "order": 4,
+          "media_urls": [
+            "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-setup-1-schedule-create.png",
+            "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-setup-2-venue-details.png",
+            "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-setup-2-venue-details.png",
+            "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-setup-4-outline.png"
+          ]
+        },
+        {
+          "title": "When Algorithms Meet Athletic Dreams",
+          "section_type": "implementation",
+          "content": "I built a 'greedy' algorithm that makes optimal scheduling decisions in real-time, balancing loads across lanes while avoiding conflicts. Performance challenges with large schedules led me to redesign the workflow around individual event blocks rather than generating everything upfront.",
+          "context": "Technical implementation began with straightforward data architecture: a schedule had many event blocks and columns (lanes), event blocks and columns each had many column events in a particular order (e.g. beginner solo for contestants age 10-12), and column events had many performances, which represented an athlete, duet, trio, or team appearing in a specific order. To generate the schedule, the algorithm worked in a 'greedy' fashion, making the optimal choice for what it knew at the time. As it worked its way through the outline, it stored lane assignments in local memory in order to avoid: Judge-Coach conflicts: If a judge is also coaching a contestant, that contestant can't perform in that judge's lane Division conflicts: Judges shouldn't judge the same skill level/age group for an event repeatedly Timing conflicts: Athletes can't perform too close together if they're in multiple events For each unscheduled event, the algorithm: Finds the column with the fewest scheduled performances (load balancing) Checks if the event can legally be placed there (no conflicts) Selects the event that creates the least scheduling conflicts for future placements Within each event, contestants are ordered by configurable rules: Registration date (first-come, first-served) Alphabetical by last name Age (youngest to oldest or vice versa) Random ordering The system automatically inserts 'bye' slots (empty time slots) to: - Provide rest time between performances for the same athlete - Create gaps between different events - Balance the schedule across lanes If the algorithm encounters an event that cannot be scheduled (due to every lane having a conflict of some sort), it leaves the event unscheduled. The event organizer must then add the event themselves. This prioritizes smooth schedule completion over perfection. The wizard UI is powered by a combination of Django forms and Vue components. The backend logic is written in Python. And the schedule editing interface is created in Vue. During schedule generation, performance was a major consideration, as the algorithm required access to many different tables. I used prefetching and local memory storage to minimize database queries. I also broke the schedule down into batch requests (one per event in the outline). These techniques allowed even the largest contest (1,250 performances) to be scheduled in less than a minute. Once the schedule was drafted, the interface signaled existing conflicts to organizers in real time. As they continued to make changes, the page reflected any conflict resolutions or introductions. Editing the earliest/topmost rows of a schedule (regardless of size) turned out to have significant performance issues. Any time an organizer added or removed an event or performance, anything that came after that row also had to be updated (sometimes for all columns in the schedule). So for changes made at the top of the schedule, this meant updating virtually the entire schedule. I prevented compounding race conditions by disabling drag-and-drop schedule changes while saving was in process, but this also 'froze' the user experience for 1-10 seconds at a time. Event organizers expressed confusion and frustration with this experience. My solution was to confine the generation process to take place independently for each event block, rather than creating the entire schedule up front. This meant a change in the schedule building workflow: organizers defined and generated their first block, addressed any conflicts quickly and easily (since nothing came after it yet), then moved onto the next block and repeated the process until the entire schedule was in place.",
+          "order": 5,
+          "media_urls": []
+        },
+        {
+          "title": "From 50 Hours to 3: Mission Accomplished",
+          "section_type": "results",
+          "content": "The Schedule Builder achieved 80-90% time reduction with 75-100% automation success rates across all contests in its first season. Every surveyed organizer expressed satisfaction and willingness to recommend the tool, calling it a 'total game changer.'",
+          "context": "The Schedule Builder achieved strong adoption and measurable time savings in its first season: 80-90% time reduction – Organizers completed schedules in 1-5 hours vs. 11-25 hours previously 75-100% auto-generation success rate – Most schedules required only minor manual adjustments Significant error reduction – Automated conflict detection prevented scheduling mistakes 100% satisfaction – All surveyed organizers would use again and recommend to others Stakeholders praised the faster schedule distribution and improved online viewing experience, with one organizer calling it a 'total game changer' that saves 'hours/days of time.'",
+          "order": 6,
+          "media_urls": []
+        },
+        {
+          "title": "The Missing Piece: Judge Management",
+          "section_type": "reflection",
+          "content": "While the feature succeeded in automating schedule generation, judge assignment remained a manual pain point that required switching contexts. Future iterations should integrate CRUD operations directly into the workflow where information is needed most.",
+          "context": "This feature successfully met user needs in many ways, but there were still things about it that could’ve been better. For example, event organizers struggled to know when, where, and how to add judges to the schedule. Divisions and contestants were populated automatically when attendees submitted their entries. But judges had to be created and added to each lane/schedule manually. The schedule setup wizard assumed judges were already created, but not assigned to a lane. There was no way for organizers to add new judges while setting up the schedule itself. In a future iteration of this feature, I’d like to think more deeply about supporting these kinds of on-the-fly CRUD actions in greater proximity to where the information is needed.",
+          "order": 7,
+          "media_urls": []
+        }
+      ]
+    },
+    {
+      "project_slug": "twirlmate",
+      "category": "design",
+      "hero_image": "https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-registration-cover.png",
+      "title": "Reducing friction in a multi-step flow",
+      "slug": "twirlmate-mobile-registration-redesign",
+      "description": "I redesigned the core mobile registration experience, transforming a disjointed onboarding flow into a seamless customer journey.",
+      "metrics": [
+        {
+          "value": "89",
+          "label": "System Usability Scale score"
+        },
+        {
+          "value": "62.5%",
+          "label": "faster time to conversion"
+        }
+      ],
+      "sections": [
+        {
+          "title": "Preserving Context, Not Switching It",
+          "section_type": "overview",
+          "content": "Multi-step registration flows failed because they forced users to context-switch at the worst moment—right when they were ready to convert. I redesigned the mobile experience to embed account setup directly into registration, achieving an 89 SUS score and reducing completion time by 62.5%.",
+          "context": "Registration systems often assume users will follow a sequential, 'logical' path: set up your account, explore the platform, then take action when ready. This works well for platforms where exploration is the primary use case. But it fails when users arrive with a specific, urgent goal. In this case, the contest registration platform separated account setup from event registration, treating them as distinct workflows. The system's logic made sense from an architectural perspective: users need accounts before they can register for anything. But user behavior told a different story. People didn't come to 'set up an account.' They came because a coach sent them a link to register for next month's competition. They had one clear goal, and the system interrupted that goal with an unexpected obstacle. The result: Users lost their place when redirected to account setup, flows weren't linked so users had to manually navigate back to find their contest, mobile usability issues compounded the confusion, and support burden increased as some users gave up entirely requiring manual registration and invoicing. The broader principle: When user intent is task-focused ('I need to do X now'), any interruption—even a necessary one—needs to feel like part of the same journey, not a detour. Think of it like Amazon suddenly requiring you to set up your account before showing the checkout button. Technically logical. Poor UX.",
+          "order": 1,
+          "media_urls": ["https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-registration-overview.png"]
+        },
+        {
+          "title": "Expected User Behavior Didn't Match Reality",
+          "section_type": "context",
+          "content": "The platform assumed users would create accounts first, then register for events later, but users arrived with immediate intent to register for specific contests. This architectural mismatch between system logic and user goals created a costly conversion bottleneck.",
+          "order": 2,
+          "media_urls": ["https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-registration-context.png"]
+        },
+        {
+          "title": "Customer Support: My Best Research Tool",
+          "section_type": "research",
+          "content": "As the sole designer handling support, I witnessed the problem firsthand: frustrated users submitting tickets, abandoned registrations requiring manual completion, and clear revenue loss. The pattern revealed that friction at the point of conversion was exponentially expensive—users weren't confused by pricing, but by being forced to context-switch when ready to buy.",
+          "order": 3,
+          "media_urls": ["https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-registration-research.png"]
+        },
+        {
+          "title": "Prioritizing UX Over Technical Convenience",
+          "section_type": "design",
+          "content": "I evaluated three solutions and chose to embed account setup directly into registration rather than redirecting users away and back. Combined with mobile-optimized navigation improvements, users could complete the entire flow without losing their mental context or physical place in the interface.",
+          "order": 4,
+          "media_urls": ["https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-registration-design.png"]
+        },
+        {
+          "title": "From \"Meh\" to \"Marvelous!\"",
+          "section_type": "results",
+          "content": "Usability testing showed task completion time dropped from 8 minutes to 3 minutes (62.5% reduction). Mobile usability scores jumped from 'marginally acceptable' (SUS: 67) to 'excellent' (SUS: 89). Users completed the flow without confusion or manual intervention.",
+          "context": "While the redesigned flow is currently in development, usability testing with target users validated the approach with significant measurable improvements: Efficiency Gains: Task completion time: 8 minutes → 3 minutes (62.5% reduction), zero instances of users getting lost or unable to complete the flow, no confusion about 'where to go next' after account setup. Mobile Usability: System Usability Scale (SUS) scores: 67 → 89. A SUS score of 89 is considered 'excellent' and places the experience above the 90th percentile. The original score of 67 was 'marginally acceptable'—functional but frustrating. Qualitative Feedback: Users described the new flow as 'smooth,' 'straightforward,' and 'exactly what I expected.' The embedded approach eliminated the mental burden of context-switching. Mobile navigation improvements made the interface feel 'less cramped' and 'easier to use on my phone.' Expected Business Impact: Once implemented in production, this redesign is projected to: eliminate manual registration processing (significant time savings), reduce support tickets related to registration confusion, improve conversion rates by removing the primary abandonment point, create better first impressions for new users arriving with clear intent.",
+          "order": 6,
+          "media_urls": ["https://nhm-portfolio-chat.s3.us-east-1.amazonaws.com/project_images/twirlmate-registration-results.png"]
+        },
+        {
+          "title": "Small Changes, Compounding Returns",
+          "section_type": "reflection",
+          "content": "Small reductions in task completion time compound into major improvements in conversion and user satisfaction. Context preservation matters—especially on mobile, where every extra tap or navigation step is magnified by device constraints.",
+          "order": 7,
+          "media_urls": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from .models import Project, CaseStudy, Section
+from .models import Project, CaseStudy, Section, Metric
 
 
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ['id', 'title', 'section_type', 'content', 'order', 'media_urls']
+
+
+class MetricSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Metric
+        fields = ['id', 'value', 'label', 'order']
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -38,6 +44,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 class CaseStudySerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True)
     sections = SectionSerializer(many=True, read_only=True)
+    metrics = MetricSerializer(many=True, read_only=True)
     title = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
     
@@ -45,7 +52,7 @@ class CaseStudySerializer(serializers.ModelSerializer):
         model = CaseStudy
         fields = [
             'id', 'title', 'slug', 'description', 'category', 
-            'hero_image', 'sections', 'project'
+            'hero_image', 'sections', 'metrics', 'project'
         ]
     
     def get_title(self, obj):
